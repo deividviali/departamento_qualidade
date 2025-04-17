@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="pt‑BR">
+<head>
+  <meta charset="utf‑8">
+  <title>Processando Coleta</title>
+</head>
+<body>
+  <h1>Execução em Andamento</h1>
+  <div id="log" style="font-family: monospace; white-space: pre-wrap;"></div>
+
+  <script>
+    // função que vai ser usada pelo servidor para "empurrar" JS
+    function log(msg) {
+      document
+        .getElementById('log')
+        .innerHTML += msg + "\n";
+    }
+  </script>
+</body>
+</html>

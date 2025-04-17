@@ -1,0 +1,42 @@
+<!-- templates/report.html -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Relatório de Análises</title>
+</head>
+<body>
+  <h1>Relatório de Análises - RE {{ re }}</h1>
+
+  <!-- Botões de ação -->
+  <p>
+    <a href="{{ url_for('download_excel') }}">📥 Baixar Resultado (Excel)</a> |
+    <a href="{{ url_for('download_pdf') }}">📥 Baixar Resultado (PDF)</a> |
+    <a href="{{ url_for('download_data') }}">📥 Extrair Dados Coletados</a> |
+    <a href="{{ url_for('analyze') }}">🔄 Nova Análise</a>
+  </p>
+
+  <!-- Tabela resumida com atividade -->
+  <table border="1" cellpadding="5" cellspacing="0">
+    <thead>
+      <tr>
+        <th>Atividade</th>
+        <th>Protocolo</th>
+        <th>Status</th>
+        <th>Erros de Avaliação</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in data %}
+      <tr>
+        <td>{{ row.atividade }}</td>
+        <td>{{ row.protocolo }}</td>
+        <td>{{ row.status }}</td>
+        <td>{{ row.erros_avaliacao }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
+

@@ -1,0 +1,3 @@
+[console_scripts]
+loadref = scripts.load_reference:main
+runact = scripts.run_activity:main

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Resultados</title>
+</head>
+<body>
+  <h1>Resultados da Análise</h1>
+  {% for res in resultados %}
+    <section>
+      <h2>Atividade: {{ res.atividade }}</h2>
+      <p><strong>Protocolo:</strong> {{ res.protocolo }}</p>
+      <p><strong>Nota:</strong> {{ res.nota }} ({{ 'certo' if res.nota == 1 else 'errado' }})</p>
+      {% if res.erros_coleta %}
+        <h3>Erros de Coleta:</h3>
+        <ul>
+          {% for e in res.erros_coleta %}
+            <li>{{ e }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+      {% if res.erros_avaliacao %}
+        <h3>Erros de Avaliação:</h3>
+        <ul>
+          {% for e in res.erros_avaliacao %}
+            <li>{{ e }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </section>
+    <hr>
+  {% endfor %}
+  <p><a href="{{ url_for('analyze') }}">Nova Análise</a> | <a href="{{ url_for('report') }}">Meu Relatório</a> | <a href="{{ url_for('logout') }}">Logout</a></p>
+</body>
+</html>

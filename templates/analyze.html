@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Análise de Atividades</title>
+</head>
+<body>
+  <h1>Realizar Análise</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul>
+      {% for category, msg in messages %}
+        <li class="{{ category }}">{{ msg }}</li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+  <form method="post">
+    <label>
+      Matrícula (RE):
+      <input type="text" name="re" value="{{ re }}" required>
+    </label><br><br>
+    <label>
+      Protocolo:
+      <input type="text" name="protocolo" required>
+    </label><br><br>
+    <label>
+      Atividades:<br>
+      <select name="atividades" multiple size="{{ options|length }}" required>
+        {% for key, (tipo, label) in options.items() %}
+          <option value="{{ key }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label><br><br>
+    <button type="submit">Verificar</button>
+  </form>
+  <p><a href="{{ url_for('report') }}">Ver Relatório</a> | <a href="{{ url_for('logout') }}">Logout</a></p>
+</body>
+</html>

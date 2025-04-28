@@ -5,7 +5,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from utils.helpers import normalize_space, tratar_mensagem_erro, fechar_popup
 
-# Funções de coleta por atividade (exemplos)
 def tratar_mensagem_erro(mensagem):
     return mensagem.split(":")[0] if ":" in mensagem else mensagem
 
@@ -338,13 +337,12 @@ def extrair_comandante(driver) -> str:
         raise ValueError("Nenhuma tabela com cabeçalho 'comandante' encontrada.")
     return "; ".join(resultados)
 
-def coletar_a(driver, protocolo, erros_coleta):
-     # Insere o protocolo na busca
+def coletar_a(driver, protocolo, erros_coleta):    
         WebDriverWait(driver, 15).until(
-            EC.element_to_be_clickable((By.XPATH, "/html/body/div[1]/div/ul/li[4]/a"))
+            EC.element_to_be_clickable((By.LINK_TEXT, "Consultas"))
         ).click()
         WebDriverWait(driver, 30).until(
-            EC.element_to_be_clickable((By.XPATH, "/html/body/div[1]/div/ul/li[4]/ul/li[2]/a"))
+            EC.element_to_be_clickable((By.LINK_TEXT, "Ocorrências"))
         ).click()
         time.sleep(10)
         campo_prot = "/html/body/form/div[1]/div/div[2]/div[1]/div[3]/div[2]/div[1]/div/input"
@@ -372,16 +370,61 @@ def coletar_a(driver, protocolo, erros_coleta):
             "codigo_fechamento": "/html/body/div[24]/div[2]",
             "origem_abertura_oc": "/html/body/div[15]/div[2]",
             "data_oc": "/html/body/div[1]/label",
+            "relato_policial": "/html/body/div[26]/div[2]",
+            "complemento_oc": "/html/body/div[11]/table/tbody/tr/td"
+
         }
-        dados = extrair_campos(driver, xpaths, erros_coleta)        
-        
+        dados = extrair_campos(driver, xpaths, erros_coleta)   
+
+        try:
+            dados["natureza"] = extrair_naturezas(driver)
+        except Exception as e:
+            erros_coleta.append(tratar_mensagem_erro(f"Erro extraindo Natureza: {e}"))
+            dados["natureza"] = ""   
+
         try:
             dados["comandante_guarnicao"] = extrair_comandante(driver)
         except Exception as e:
             erros_coleta.append(tratar_mensagem_erro(str(e)))
-            dados["comandante_guarnicao"] = ""
+            dados["comandante_guarnicao"] = ""                   
+        if dados["comandante_guarnicao"]:
+            lista_comandantes = [cmd.strip() for cmd in dados["comandante_guarnicao"].split(";") if cmd.strip()]
+            lista_comandantes_unicas = list(dict.fromkeys(lista_comandantes))
+            dados["comandante_guarnicao"] = "; ".join(lista_comandantes_unicas)
 
-        
+        try:            
+            veiculos_str, tipo_veiculos = extrair_veiculos_e_detalhes(driver, erros_coleta)            
+            dados["veiculos"] = veiculos_str
+            dados["tipo_veiculos"] = "; ".join(tipo_veiculos)
+        except Exception as e:
+            msg = f"Erro ao extrair veículos: {e}"
+            print(tratar_mensagem_erro(msg))
+            erros_coleta.append(tratar_mensagem_erro(msg))
+            dados["veiculos"] = ""
+            dados["tipo_veiculos"] = ""
+            
+        try:            
+            armas_str, tipo_armas = extrair_armas_e_detalhes(driver, erros_coleta)            
+            dados["armas"] = armas_str
+            dados["tipo_armas"] = "; ".join(tipo_armas)
+        except Exception as e:
+            msg = f"Erro ao extrair Armas: {e}"
+            print(tratar_mensagem_erro(msg))
+            erros_coleta.append(tratar_mensagem_erro(msg))
+            dados["armas"] = ""
+            dados["tipo_armas"] = ""
+            
+        try:            
+            drogas_str, tipo_drogas = extrair_drogas_e_detalhes(driver, erros_coleta)
+            dados["drogas"] = drogas_str
+            dados["tipo_drogas"] = "; ".join(tipo_drogas)
+        except Exception as e:
+            msg = f"Erro ao extrair Drogas: {e}"
+            print(tratar_mensagem_erro(msg))
+            erros_coleta.append(tratar_mensagem_erro(msg))
+            dados["drogas"] = ""
+            dados["tipo_drogas"] = ""
+
         try:
             env_str, env_tipos = extrair_envolvidos_e_tipos(driver, erros_coleta)
             dados["envolvido"] = env_str
@@ -400,15 +443,37 @@ def coletar_a(driver, protocolo, erros_coleta):
             prot_match = re.search(r"^(.*?)\s*\[", info_protocolo)
             if prot_match:
                 dados["protocolo"] = prot_match.group(1).strip()
+        
 
-        # Fecha aba e retorna
+        try:
+            objetos_str, tipo_situacao = extrair_tipo_situacao(driver, erros_coleta)
+            dados["objetos"] = objetos_str                
+            dados["tipo_situacao"] = "; ".join(tipo_situacao)                               
+        except Exception as e:
+            msg = f"Erro ao extrair objetos: {e}"
+            print(tratar_mensagem_erro(msg))
+            erros_coleta.append(tratar_mensagem_erro(msg))
+            dados["objetos"] = ""
+            dados["tipo_objetos"] = ""
+        
         driver.close()
         driver.switch_to.window(original)
         return dados
     
 
-# def coletar_b(driver, protocolo, erros_coleta):
-#     # implemente lógica de coleta da atividade B
-#     return {}
+def coletar_b(driver, protocolo, erros_coleta):
+    return coletar_a(driver, protocolo, erros_coleta)
 
-# Adicione funções coletar_c, coletar_d etc conforme necessidade
+def coletar_c(driver, protocolo, erros_coleta):
+    return coletar_a(driver, protocolo, erros_coleta)
+
+def coletar_d(driver, protocolo, erros_coleta):
+    return coletar_a(driver, protocolo, erros_coleta)
+
+def coletar_e(driver, protocolo, erros_coleta):
+    return coletar_a(driver, protocolo, erros_coleta)
+
+def coletar_f(driver, protocolo, erros_coleta):
+    return coletar_a(driver, protocolo, erros_coleta)
+    
+

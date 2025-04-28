@@ -1,42 +1,102 @@
-<!-- templates/report.html -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <title>Relatório de Análises</title>
+  <title>RELATÓRIO GERAL DE ATIVIDADES DO CFS 2025</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #e0e0e0;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 50px auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .actions {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .actions a {
+      display: inline-block;
+      margin: 5px 10px;
+      padding: 10px 15px;
+      background-color: #1e88e5;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+
+    .actions a:hover {
+      background-color: #1565c0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 12px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+
+    thead th {
+      background-color: #1e88e5;
+      color: white;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+  </style>
 </head>
 <body>
-  <h1>Relatório de Análises - RE {{ re }}</h1>
+  <div class="container">
+    <h1>Relatório de Atividades - {{ re }}</h1>
 
-  <!-- Botões de ação -->
-  <p>
-    <a href="{{ url_for('download_excel') }}">📥 Baixar Resultado (Excel)</a> |
-    <a href="{{ url_for('download_pdf') }}">📥 Baixar Resultado (PDF)</a> |
-    <a href="{{ url_for('download_data') }}">📥 Extrair Dados Coletados</a> |
-    <a href="{{ url_for('analyze') }}">🔄 Nova Análise</a>
-  </p>
+    <div class="actions">
+      <a href="{{ url_for('download_excel') }}">📥 Baixar Resultado (Excel)</a>
+      <a href="{{ url_for('download_pdf') }}">📥 Baixar Resultado (PDF)</a>
+      <a href="{{ url_for('download_data') }}">📥 Extrair Dados Coletados</a>
+      <a href="{{ url_for('analyze') }}">🔄 Nova Correção</a>
+    </div>
 
-  <!-- Tabela resumida com atividade -->
-  <table border="1" cellpadding="5" cellspacing="0">
-    <thead>
-      <tr>
-        <th>Atividade</th>
-        <th>Protocolo</th>
-        <th>Status</th>
-        <th>Erros de Avaliação</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for row in data %}
-      <tr>
-        <td>{{ row.atividade }}</td>
-        <td>{{ row.protocolo }}</td>
-        <td>{{ row.status }}</td>
-        <td>{{ row.erros_avaliacao }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+    <table>
+      <thead>
+        <tr>
+          <th>Atividade</th>
+          <th>Protocolo</th>
+          <th>Status</th>
+          <th>Erros de Avaliação</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in data %}
+        <tr>
+          <td>{{ row.atividade }}</td>
+          <td>{{ row.protocolo }}</td>
+          <td>{{ row.status }}</td>
+          <td>{{ row.erros_avaliacao }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </body>
 </html>
-

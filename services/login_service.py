@@ -12,6 +12,10 @@ def iniciar_navegador(headless=False):
     options = webdriver.ChromeOptions()
     if headless:
         options.add_argument("--headless")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+
     driver = webdriver.Chrome(options=options)
     driver.get(LOGIN_URL)
     return driver
@@ -38,4 +42,4 @@ def efetuar_login(driver) -> bool:
 
 
 
-    time.sleep(5)
+    

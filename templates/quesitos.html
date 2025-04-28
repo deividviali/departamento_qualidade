@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Quesitos avaliados na atividade</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #e0e0e0;
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .item {
+      margin-bottom: 20px;
+    }
+    .item h2 {
+      margin: 0 0 5px;
+    }
+    .item p {
+      margin: 0;
+    }
+    a {
+      text-decoration: none;
+      color: #1e88e5;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Quesitos avaliados na atividade</h1>
+
+    <div class="item">
+      <h2>Atividade A</h2>
+      <p>
+        A ocorrência deverá atender, obrigatoriamente, aos seguintes requisitos:
+        I. ser gerada via web e empenhada para a guarnição do respectivo aluno;
+        II. ser criada pelo próprio aluno no ambiente web;
+        III. ter o aluno como comandante da guarnição logada;
+        IV. ser encerrada mediante o registro do CF “Averiguação Policial sem Alteração”;
+        V. conter o cadastro de um único envolvido, cujo tipo de participação seja “abordado”.</p>
+    </div>
+
+    <div class="item">
+      <h2>Atividade B</h2>
+      <p>
+        A ocorrência deverá atender, obrigatoriamente, aos seguintes requisitos:
+        I. ser gerada via web e empenhada para a guarnição do respectivo aluno;
+        II. ser criada pelo próprio aluno no ambiente web;
+        III. ter o aluno como comandante da guarnição logada;
+        IV. ser encerrada mediante o registro do CF “Resolvido no Local”.</p>
+    </div>
+
+    <div class="item">
+      <h2>Atividade C</h2>
+      <p>
+        A ocorrência deverá atender, obrigatoriamente, aos seguintes requisitos:
+        I. ser gerada pelo SISEG e empenhada para a guarnição do respectivo aluno;
+        II. ter o aluno logado como comandante da guarnição;
+        III. ter a natureza classificada como “Averiguação de Pessoa em Atitude Suspeita”;
+        IV. conter o cadastro de um envolvido, cujo tipo de participação seja “abordado”.
+      </p>
+    </div>
+
+    <div class="item">
+      <h2>Atividade D</h2>
+      <p>
+        A ocorrência deverá atender, obrigatoriamente, aos seguintes requisitos:
+        I. estar logada como comandante da guarnição;
+        II. a ocorrência pode ser iniciada via web ou direto pelo PMRO Mobile;
+        III. ser encerrada com CF “PA”;
+        IV. ter como natureza “Lesão Corporal Leve Dolosa”;
+        V. ter como natureza “Posse Irregular de Arma de Fogo de uso permitido”;
+        VI. registrar que o autor foi abordado;
+        VII. conter o cadastro de dois envolvidos, sendo um vítima e um autor;
+        VIII. cadastrar arma de fogo;
+        IX. cadastrar objeto do tipo “faca/utensílio de cozinha”;
+        X. produzir o relato policial com apoio de inteligência artificial.
+    </p>
+    </div>
+
+    <div class="item">
+      <h2>Atividade E</h2>
+      <p>
+        A ocorrência deverá atender, obrigatoriamente, aos seguintes requisitos:
+        I. ser encerrada com CF “Termo Circustanciado”;
+        II. ter as naturezas “Perturbação do Sossego” e “Desacato”;
+        III. incluir, um objeto, devendo conter a situação:  apreendido por infração penal; deposito fiel;
+        IV. conter o registro de um envolvido, cujo tipo de participação tenha “Fiel Depositáro”;
+        V. estar logada como comandante da guarnição.                 
+      </p>
+    </div>
+    
+    <div class="item">
+      <h2>Atividade F</h2>
+      <p>
+        A ocorrência deverá atender, obrigatoriamente, aos seguintes requisitos:
+        I. ser encerrada com CF “Termo Circustanciado”;
+        II. ter as naturezas “Sinistro de Trânsito com Pessoa Ferida ou Morta”, “Posse ou Porte de Drogas para Uso Pessoal” e “Lesão Corporal Culposa em Acidente de Trânsito”;
+        III. conter o registro de ao menos um envolvido com o tipo de participação “Fiel Depositáro”;
+        IV. produzir o relato policial com apoio de inteligência artificial.  
+        V.  estar logada como comandante da guarnição.        
+      </p>
+    </div>
+
+    <div class="item">
+      <h2>PPE</h2>
+      <p>
+          As informações quanto a avalição da Prova Prática de Execução - PPE, serão passadas no dia da avaliação pelo respectivo instrutor.   
+      </p>
+    </div>
+    <p style="text-align:center; margin-top:30px;">
+        <a href="{{ url_for('analyze') }}">← Voltar à avaliação</a>
+    </p>
+  </div>
+</body>
+</html>

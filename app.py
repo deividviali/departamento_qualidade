@@ -9,31 +9,106 @@ from io import BytesIO
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
-from config.settings import DB_PATH_TEMPLATE
+from config.settings import DB_PATH
 from flask import Response, stream_with_context, render_template
 import json
-
+from flask import Flask, render_template, request, flash
+from utils.db import init_db, get_student
+from flask import Flask, request, Response, render_template, redirect, url_for, flash, send_file
+from flask import flash, redirect, url_for, current_app
+from selenium.common.exceptions import InvalidSessionIdException
 
 app = Flask(__name__)
 app.secret_key = 'troque_para_uma_chave_secreta_segura'
 
 ATIVIDADES_OPCOES = {
-    '1': ('A', 'Atividade 1'),
-    '2': ('B', 'Atividade 2'),
-    '3': ('C', 'Atividade 3'),
+    '1': ('A', 'Atividade A'),
+    '2': ('B', 'Atividade B'),
+    '3': ('C', 'Atividade C'),
+    '4': ('D', 'Atividade D'),
+    '5': ('E', 'Atividade E'),
+    '6': ('F', 'Atividade F'),
+    '7': ('PPE', 'Prova Prática de Execução'),
+    
+    
 }
+
+INSTRUTOR_USERNAME = 'dinfo'
+INSTRUTOR_PASSWORD = 'dinfo2025'
+
+def check_auth(username, password):
+    return username == INSTRUTOR_USERNAME and password == INSTRUTOR_PASSWORD
+
+def authenticate():
+    return Response(
+        'Acesso restrito. Forneça usuário e senha.', 401,
+        {'WWW-Authenticate': 'Basic realm="Área do Instrutor"'}
+    )
+@app.route('/login_instrutor', methods=['GET', 'POST'])
+def login_instrutor():
+    if request.method == 'POST':
+        username = request.form.get('usuario')
+        password = request.form.get('senha')
+
+        if username == INSTRUTOR_USERNAME and password == INSTRUTOR_PASSWORD:
+            session['instrutor'] = True
+            return redirect(url_for('instrutor'))
+        else:
+            flash('Usuário ou senha inválidos.', 'error')
+            return redirect(url_for('login_instrutor'))
+
+    return render_template('login_instrutor.html')
+
+@app.route('/logout_instrutor')
+def logout_instrutor():
+    session.pop('instrutor', None)
+    return redirect(url_for('login'))
+
+@app.route('/instrutor')
+def instrutor():
+    if not session.get('instrutor'):
+        return redirect(url_for('login_instrutor'))
+    return render_template('instrutor.html')
+
+@app.route('/gerar_relatorio', methods=['POST'])
+def gerar_relatorio():
+    pelotao = request.form.get('pelotao')
+    atividade = request.form.get('atividade')
+    
+    conn = sqlite3.connect(DB_PATH)
+    query = "SELECT * FROM results WHERE 1=1"
+
+    if pelotao:
+        query += f" AND pelotao = '{pelotao}'"
+    if atividade:
+        query += f" AND atividade = '{atividade}'"
+
+    df = pd.read_sql_query(query, conn)
+    conn.close()
+
+    
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Relatório')
+
+    output.seek(0)
+    return send_file(
+        output,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name='relatorio_instrutor.xlsx'
+    )
 
 @app.before_request
 def setup_db():
-    for tipo, _ in ATIVIDADES_OPCOES.values():
-        init_db(tipo)
+    init_db()
 
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         re_val = request.form.get('re', '').strip()
-        student = get_student('A', re_val)
+        student = get_student(re_val)
         if student:
             session['re'] = re_val
             session['nome'], session['pelotao'] = student
@@ -46,15 +121,12 @@ def login():
 def analyze():
     if 're' not in session:
         return redirect(url_for('login'))
-
-    # Quando for GET, só renderiza a página de seleção:
+    
     if request.method == 'GET':
         return render_template('analyze.html',
                                options=ATIVIDADES_OPCOES,
                                re=session.get('re'))
-
-    # === A partir daqui é POST ===
-    # 1) Validações iniciais
+   
     re_val = request.form.get('re', session['re']).strip()
     protocolo = request.form.get('protocolo', '').strip()
     if not protocolo:
@@ -62,58 +134,55 @@ def analyze():
         return render_template('analyze.html',
                                options=ATIVIDADES_OPCOES,
                                re=session['re'])
-
-    # 2) AQUI definimos 'escolhas'
-    escolhas = request.form.getlist('atividades')
-    if not escolhas:
-        flash('Selecione ao menos uma atividade.', 'error')
+    
+    escolha = request.form.get('atividade')
+    if not escolha or escolha not in ATIVIDADES_OPCOES:
+        flash('Selecione uma atividade válida.', 'error')
         return render_template('analyze.html',
-                               options=ATIVIDADES_OPCOES,
-                               re=session['re'])
+                            options=ATIVIDADES_OPCOES,
+                            re=session['re'])
 
-    # 3) Traduzimos para os tipos reais (A, B, C…)
-    tipos = [ATIVIDADES_OPCOES[ch][0] for ch in escolhas if ch in ATIVIDADES_OPCOES]
+    tipos = [ATIVIDADES_OPCOES[escolha][0]]    
+    
+    print(f"DEBUG analyze: tipos = {tipos!r}")    
 
-    # 4) Executa Selenium / orquestração
-    driver = iniciar_navegador(headless=False)
+    driver = iniciar_navegador(headless=True) #False para habilitar verificação do navegador
     efetuar_login(driver)
     tarefa = Tarefa(
         protocolo=protocolo,
         re=session['re'],
         nome=session['nome'],
         pelotao=session['pelotao'],
-        atividades=tipos
+        atividades=tipos        
     )
+    print("DEBUG analyze: chamando orquestrar_tarefas")
 
     resultados = orquestrar_tarefas(driver, tarefa)
     for tipo, resultado in zip(tipos, resultados):
         save_result(tipo, resultado)
     driver.quit()
 
-    # 5) Renderiza o resultado final
-    return render_template('result.html', resultados=resultados)
+    
+    return render_template(
+        'result.html',
+        resultados=zip(tipos, resultados)   
+    )
 
-
-from io import BytesIO
-import pandas as pd
-
-# Ajuste na view /report:
 @app.route('/report')
 def report():
     if 're' not in session:
         return redirect(url_for('login'))
-    re_val = session['re']
-    conn = sqlite3.connect(DB_PATH_TEMPLATE.format(atividade='A'))
+    re_val = session['re']   
+    conn = sqlite3.connect(DB_PATH)    
     df = pd.read_sql_query(
-        "SELECT protocolo, erros_avaliacao, nota, '' AS atividade FROM results WHERE re = ?",
+        "SELECT atividade, protocolo, erros_avaliacao, nota FROM results WHERE re = ?",
         conn, params=(re_val,)
     )
     conn.close()
-    # Preenche status e define atividade (ex: 'A'; se dinâmico, use coluna real)
-    df['status'] = df['nota'].map({1:'certo', 0:'errado'})
-    df['atividade'] = 'A'
-    data = df[['atividade','protocolo','status','erros_avaliacao']] \
+    df['status'] = df['nota'].map({1: 'certo', 0: 'errado'})
+    data = df[['atividade','protocolo','status','erros_avaliacao']]\
              .to_dict(orient='records')
+
     return render_template('report.html', data=data, re=re_val)
 
 
@@ -122,7 +191,7 @@ def download_excel():
     if 're' not in session:
         return redirect(url_for('login'))
     re_val = session['re']
-    conn = sqlite3.connect(DB_PATH_TEMPLATE.format(atividade='A'))
+    conn = sqlite3.connect(DB_PATH)
     df = pd.read_sql_query(
         "SELECT protocolo, nota, erros_avaliacao FROM results WHERE re = ?", 
         conn, params=(re_val,)
@@ -145,7 +214,7 @@ def download_pdf():
     if 're' not in session:
         return redirect(url_for('login'))
     re_val = session['re']
-    conn = sqlite3.connect(DB_PATH_TEMPLATE.format(atividade='A'))
+    conn = sqlite3.connect(DB_PATH)
     df = pd.read_sql_query(
         "SELECT protocolo, nota, erros_avaliacao FROM results WHERE re = ?", 
         conn, params=(re_val,)
@@ -176,12 +245,10 @@ def download_pdf():
 def download_data():
     if 're' not in session:
         return redirect(url_for('login'))
-    re_val = session['re']
-    # Puxa todas as colunas salvas no banco para esse RE
-    conn = sqlite3.connect(DB_PATH_TEMPLATE.format(atividade='A'))
+    re_val = session['re']   
+    conn = sqlite3.connect(DB_PATH)
     df = pd.read_sql_query("SELECT * FROM results WHERE re = ?", conn, params=(re_val,))
-    conn.close()
-    # Exporta para Excel
+    conn.close()    
     output = BytesIO()
     df.to_excel(output, index=False)
     output.seek(0)
@@ -192,11 +259,36 @@ def download_data():
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
 
+@app.route('/quesitos')
+def quesitos():   
+    return render_template('quesitos.html')
 
-@app.route('/logout')
+@app.route('/logout', methods=['GET', 'POST'])
 def logout():
     session.clear()
     return redirect(url_for('login'))
+
+@app.errorhandler(ValueError)
+def handle_value_error(e):
+    current_app.logger.error(f"ValueError não capturada: {e}")
+    flash(
+        "A sessão do navegador foi perdida durante a execução. "
+        "Por favor, recarregue a página e tente novamente."
+        "Verifique se o número do protocolo está correto e que esteja devidamente finalizado no ambinete SISEG",
+        'error'
+    )
+    return redirect(url_for('analyze'))
+
+@app.errorhandler(InvalidSessionIdException)
+def handle_invalid_session(e):
+    current_app.logger.error(f"InvalidSessionIdException capturada: {e}")
+    flash(
+        "A sessão do navegador foi perdida durante a execução. "
+        "Por favor, recarregue a página e tente novamente."
+        "Verifique se o número do protocolo está correto e que esteja devidamente finalizado no ambinete SISEG",
+        'error'
+    )
+    return redirect(url_for('analyze'))
 
 if __name__ == '__main__':
     app.run(debug=True)

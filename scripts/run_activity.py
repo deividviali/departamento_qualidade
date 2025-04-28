@@ -16,15 +16,12 @@ def load_batch(csv_path):
 
 
 def main():
-    args = parse_args()
-    # Inicializa o banco de dados para a atividade
+    args = parse_args()    
     init_db(args.atividade)
-
-    # Inicia navegador e faz login
+    
     driver = iniciar_navegador()
     efetuar_login(driver)
-
-    # Carrega o conjunto de entradas (RE, protocolo)
+    
     if args.batch_file:
         entries = load_batch(args.batch_file)
     else:
@@ -33,8 +30,7 @@ def main():
             sys.exit(1)
         entries = [(args.re, args.protocolo)]
 
-    resultados = []
-    # Permite múltiplos tipos, separados por vírgula
+    resultados = []    
     atividades = [t.strip() for t in args.atividade.split(',')]
 
     from models.tarefa import Tarefa
@@ -44,8 +40,7 @@ def main():
             print(f"Aluno RE {re_val} não encontrado.")
             continue
         nome, pelotao = student
-
-        # Cria o objeto Tarefa com lista de atividades
+        
         tarefa = Tarefa(
             protocolo=protocolo,
             re=re_val,
@@ -53,18 +48,14 @@ def main():
             pelotao=pelotao,
             atividades=atividades
         )
-
-        # Orquestra coleta e avaliação para cada tipo
+       
         batch_results = orquestrar_tarefas(driver, tarefa)
-        for resultado in batch_results:
-            # Persiste cada resultado individualmente
+        for resultado in batch_results:            
             save_result(args.atividade, resultado)
             resultados.append(resultado)
-
-    # Fecha o navegador
+    
     driver.quit()
-
-    # Exibe todos os resultados no console (função aceita lista)
+   
     print_console(resultados)
 
 

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Relatórios do Instrutor</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #e0e0e0;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    h2 {
+      margin-bottom: 30px;
+    }
+
+    form {
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      width: 300px;
+    }
+
+    label {
+      font-weight: bold;
+    }
+
+    select {
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button[type="submit"] {
+      padding: 12px;
+      background-color: #1e88e5;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button[type="submit"]:hover {
+      background-color: #1565c0;
+    }
+
+    
+    .logout-inline {
+      padding: 8px 12px;
+      background-color: #5a0e0d;
+      color: rgb(117, 67, 67);
+      border: none;
+      border-radius: 5px;
+      font-size: 0.9em;
+      cursor: pointer;
+      align-self: flex-start; 
+      margin-top: 5px;
+    }
+    .logout-inline:hover {
+      background-color: #c62828;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Relatórios por Filtro</h2>
+    <form method="post" action="/gerar_relatorio">
+      <label for="pelotao">Selecionar Pelotão:</label>
+      <select name="pelotao" id="pelotao">
+        <option value="">--Todos--</option>
+        <option value="1">1º Pelotão</option>
+        <option value="2">2º Pelotão</option>
+        <option value="3">3º Pelotão</option>
+      </select>
+
+      <label for="atividade">Selecionar Atividade:</label>
+      <select name="atividade" id="atividade">
+        <option value="">--Todas--</option>
+        <option value="A">Atividade A</option>
+        <option value="B">Atividade B</option>
+        <option value="C">Atividade C</option>
+        <option value="D">Atividade D</option>
+        <option value="E">Atividade E</option>
+        <option value="E">Atividade E</option>
+        <option value="PPE">Prova Prática de execução</option>
+      </select>
+
+      <!-- Botão principal -->
+      <button type="submit">Gerar Excel</button>
+
+      <!-- Botão de logout embutido -->
+      <button 
+        type="submit" 
+        formaction="/logout" 
+        formmethod="post" 
+        class="logout-inline"
+      >
+        Logout
+      </button>
+    </form>
+  </div>
+</body>
+</html>

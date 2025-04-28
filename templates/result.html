@@ -2,34 +2,133 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <title>Resultados</title>
+  <title>Resultados da Análise</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #e0e0e0;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      background-color: #fff;
+      border-radius: 5px;
+      padding: 20px;
+      width: 90%;
+      max-width: 700px;
+      margin: 40px auto;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      position: relative;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    section {
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      margin-bottom: 10px;
+      font-size: 1.2em;
+      color: #333;
+    }
+
+    p {
+      margin: 8px 0;
+      line-height: 1.4;
+    }
+
+    strong {
+      font-weight: bold;
+    }
+
+    ul {
+      margin: 8px 0 16px 20px;
+      list-style-type: disc;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid #ddd;
+      margin: 20px 0;
+    }
+
+    .nav-links {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .nav-links a {
+      display: inline-block;
+      margin: 0 8px;
+      padding: 10px 20px;
+      background-color: #1e88e5;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+      transition: background-color 0.2s ease;
+    }
+
+    .nav-links a:hover {
+      background-color: #1669b2;
+    }
+
+    .bottom-icon {
+      position: absolute;
+      bottom: 15px;
+      right: 15px;
+      width: 50px;
+      height: 50px;
+      opacity: 0.7;
+    }
+  </style>
 </head>
 <body>
-  <h1>Resultados da Análise</h1>
-  {% for res in resultados %}
-    <section>
-      <h2>Atividade: {{ res.atividade }}</h2>
-      <p><strong>Protocolo:</strong> {{ res.protocolo }}</p>
-      <p><strong>Nota:</strong> {{ res.nota }} ({{ 'certo' if res.nota == 1 else 'errado' }})</p>
-      {% if res.erros_coleta %}
-        <h3>Erros de Coleta:</h3>
-        <ul>
-          {% for e in res.erros_coleta %}
-            <li>{{ e }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-      {% if res.erros_avaliacao %}
-        <h3>Erros de Avaliação:</h3>
-        <ul>
-          {% for e in res.erros_avaliacao %}
-            <li>{{ e }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-    </section>
-    <hr>
-  {% endfor %}
-  <p><a href="{{ url_for('analyze') }}">Nova Análise</a> | <a href="{{ url_for('report') }}">Meu Relatório</a> | <a href="{{ url_for('logout') }}">Logout</a></p>
+  <div class="container">
+    <h1>Resultados da Análise</h1>
+
+    {% for tipo, res in resultados %}
+      <section>
+        <h2>Atividade: {{ tipo }}</h2>
+        <p><strong>Protocolo:</strong> {{ res.protocolo }}</p>
+        <p>
+          <strong>Nota:</strong>
+          {{ res.nota }}
+          ({{ 'certo' if res.nota == 1 else 'errado' }})
+        </p>
+
+        {% if res.erro_coleta_dados %}
+          <h3>Erros de Coleta:</h3>
+          <ul>
+            {% for e in res.erro_coleta_dados %}
+              <li>{{ e }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+
+        {% if res.erros_avaliacao %}
+          <h3>Erros de Avaliação:</h3>
+          <ul>
+            {% for e in res.erros_avaliacao %}
+              <li>{{ e }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </section>
+      <hr>
+    {% endfor %}
+
+    <div class="nav-links">
+      <a href="{{ url_for('analyze') }}">Nova Correção</a>
+      <a href="{{ url_for('report') }}">Relatório das Atividades</a>
+      <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+   
+  </div>
 </body>
 </html>

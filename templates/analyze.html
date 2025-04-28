@@ -3,37 +3,177 @@
 <head>
   <meta charset="utf-8">
   <title>Análise de Atividades</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #e0e0e0;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    h1 {
+      margin-bottom: 30px;
+    }
+
+    form {
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      width: 400px;
+    }
+
+    label {
+      font-weight: bold;
+    }
+
+    input, select {
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      width: 100%;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 12px;
+      background-color: #1e88e5;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #1565c0;
+    }
+
+    .links {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .links a {
+      color: #1e88e5;
+      text-decoration: none;
+      margin: 0 10px;
+      font-weight: bold;
+    }
+
+    ul {
+      padding: 0;
+      list-style: none;
+      color: red;
+      margin-top: -10px;
+    }
+
+    
+    #overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background-color: rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .loader-container {
+      text-align: center;
+      color: white;
+      font-size: 18px;
+    }
+
+    .loader {
+      border: 8px solid #f3f3f3;
+      border-top: 8px solid #1e88e5;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
-  <h1>Realizar Análise</h1>
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <ul>
-      {% for category, msg in messages %}
-        <li class="{{ category }}">{{ msg }}</li>
-      {% endfor %}
-      </ul>
-    {% endif %}
-  {% endwith %}
-  <form method="post">
-    <label>
-      Matrícula (RE):
-      <input type="text" name="re" value="{{ re }}" required>
-    </label><br><br>
-    <label>
-      Protocolo:
-      <input type="text" name="protocolo" required>
-    </label><br><br>
-    <label>
-      Atividades:<br>
-      <select name="atividades" multiple size="{{ options|length }}" required>
-        {% for key, (tipo, label) in options.items() %}
-          <option value="{{ key }}">{{ label }}</option>
+  <div class="container">
+    <h1>Realizar Avaliação da Atividade - CFS_2025</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul>
+        {% for category, msg in messages %}
+          <li class="{{ category }}">{{ msg }}</li>
         {% endfor %}
-      </select>
-    </label><br><br>
-    <button type="submit">Verificar</button>
-  </form>
-  <p><a href="{{ url_for('report') }}">Ver Relatório</a> | <a href="{{ url_for('logout') }}">Logout</a></p>
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <form method="post">
+      <label>
+        Matrícula:
+        <input type="text" name="re" value="{{ re }}" required>
+      </label>
+
+      <label>
+        Informe o nº Protocolo da ocorrência para correção:
+        <input type="number" name="protocolo" required min="0" step="1" inputmode="numeric" title="Digite apenas números">
+      </label>
+
+      <label>
+        <select name="atividade" required>
+          <option value="">--Selecione--</option>
+          {% for key, (tipo, label) in options.items() %}
+            <option value="{{ key }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <button type="submit">Verificar</button>
+    </form>
+
+    <div class="links">
+      <a href="{{ url_for('report') }}">Relatório do Aluno</a> |
+      <a href="{{ url_for('logout') }}">Logout</a> |     
+      <a href="{{ url_for('quesitos') }}" class="btn-descricao">Descrição das atividades</a> 
+    </div>
+  </div>
+
+  
+  <script>
+    function mostrarCarregando() {
+      const overlay = document.createElement('div');
+      overlay.id = 'overlay';
+      overlay.innerHTML = `
+        <div class="loader-container">
+          <div class="loader"></div>
+          <p>Analisando dados, por favor aguarde...</p>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+    }
+
+    document.querySelector('form').addEventListener('submit', function() {
+      mostrarCarregando();
+    });
+  </script>
 </body>
 </html>

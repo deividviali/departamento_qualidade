@@ -1,17 +1,17 @@
 import os
 import sqlite3
 import csv
-from config.settings import DB_DIR, DB_PATH_TEMPLATE
+from config.settings import DB_PATH
+from models.resultado import Resultado
 
 
-def get_connection(atividade: str):
-    os.makedirs(DB_DIR, exist_ok=True)
-    path = DB_PATH_TEMPLATE.format(atividade=atividade.lower())
-    return sqlite3.connect(path)
+def get_connection():
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    return sqlite3.connect(DB_PATH)
 
 
-def init_db(atividade: str):
-    conn = get_connection(atividade)
+def init_db():
+    conn = get_connection()
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS students (
@@ -51,16 +51,18 @@ def init_db(atividade: str):
             erro_coleta_dados TEXT,
             erros_avaliacao TEXT,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (protocolo, re)
+            PRIMARY KEY (protocolo, re, atividade)
         )
     ''')
     conn.commit()
-    return conn
+    conn.close()
 
 
-def load_reference_from_csv(atividade: str, csv_path: str):
-    conn = init_db(atividade)
-    c = conn.cursor()    
+
+def load_reference_from_csv(csv_path: str):
+    init_db()
+    conn = get_connection()
+    c = conn.cursor()
     with open(csv_path, newline='', encoding='latin-1') as f:
         reader = csv.DictReader(f, delimiter=';', skipinitialspace=True)
         for row in reader:
@@ -72,8 +74,9 @@ def load_reference_from_csv(atividade: str, csv_path: str):
     conn.close()
 
 
-def get_student(atividade: str, re_val: str):
-    conn = get_connection(atividade)
+
+def get_student(re_val: str):
+    conn = get_connection()
     c = conn.cursor()
     c.execute("SELECT nome, pelotao FROM students WHERE re = ?", (re_val,))
     row = c.fetchone()
@@ -81,10 +84,12 @@ def get_student(atividade: str, re_val: str):
     return row
 
 
-def save_result(atividade: str, resultado):
-    conn = get_connection(atividade)
+
+def save_result(atividade: str, resultado: Resultado):
+    conn = get_connection()
     c = conn.cursor()
     data = resultado.as_dict()
+    data['atividade'] = atividade
     c.execute('''
         INSERT OR REPLACE INTO results (
             atividade ,protocolo, re, nome, pelotao,

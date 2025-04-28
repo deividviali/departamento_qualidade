@@ -1,0 +1,22 @@
+# Ambiente virtual
+.venv/
+venv/
+
+# Cache do Python
+__pycache__/
+*.py[cod]
+
+# Egg-info e builds
+*.egg-info/
+build/
+dist/
+
+# Banco de dados e logs (ajuste conforme seu projeto)
+*.db
+*.sqlite3
+logs/
+
+# IDEs / OS
+.vscode/
+.idea/
+.DS_Store

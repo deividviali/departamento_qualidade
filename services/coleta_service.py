@@ -63,21 +63,87 @@ def extrair_campos(driver, xpaths_campos, erros_coleta):
             dados[campo] = ""
     return dados
 
+# def extrair_envolvidos_e_tipos(driver, erros_coleta):      
+#     envolvidos = []
+#     tipos_envolvimento = []
+#     WebDriverWait(driver, 30).until(
+#         EC.presence_of_all_elements_located((By.XPATH, "//a[@id='dialogDetalhesEnvolvido']"))
+#     )
+#     anchors = driver.find_elements(By.XPATH, "//a[@id='dialogDetalhesEnvolvido']")
+#     for index, anchor in enumerate(anchors, start=1):        
+#         try:
+#             linha = anchor.find_element(By.XPATH, "./ancestor::tr")
+#             texto = linha.find_element(By.XPATH, "./td[2]").text.strip()
+#             if texto:
+#                 envolvidos.append(texto)
+#         except Exception as e:
+#             erros_coleta.append(tratar_mensagem_erro(f"Erro extraindo envolvido na linha {index}: {e}"))
+#         try:
+#             anchor.click()
+#             iframe = WebDriverWait(driver, 40).until(
+#                 EC.frame_to_be_available_and_switch_to_it(
+#                     (By.XPATH, "//iframe[contains(@src, '/sade/sade/public/pessoas/view/')]")
+#                 )
+#             )
+#             time.sleep(4)
+#             linhas = WebDriverWait(driver, 15).until(
+#                 EC.presence_of_all_elements_located((By.XPATH, "//table[@id='gridListEnvolvimento']/tbody/tr"))
+#             )
+
+#             for index, linha in enumerate(linhas, start=1):
+#                 try:
+#                     colunas = linha.find_elements(By.TAG_NAME, "td")
+
+#                     if len(colunas) >= 2:
+#                         envolvimento = normalize_space(colunas[0].text)
+#                         tipo_raw = colunas[1].get_attribute("innerText")  # captura texto visível (mesmo com img)
+#                         tipo_atendimento = normalize_space(tipo_raw)
+
+#                         tipos_envolvimento.append({
+#                             "texto": envolvimento,
+#                             "tipos": tipo_atendimento
+#                         })
+#                     else:
+#                         erros_coleta.append(tratar_mensagem_erro(
+#                             f"Linha {index} da tabela de envolvimento não possui ao menos 2 colunas"
+#                         ))
+#                 except Exception as e:
+#                     erros_coleta.append(tratar_mensagem_erro(
+#                         f"Erro ao processar linha {index} da tabela de envolvimento: {e}"
+#                     ))
+
+#         except Exception as e:
+#             if index == 1:
+#                 msg = f"Erro ao coletar o tipo de envolvimento do primeiro registro (linha {index}): {e}"
+#                 print(tratar_mensagem_erro(msg))
+#                 erros_coleta.append(tratar_mensagem_erro(msg))
+#             tipos_envolvimento.append({"texto": texto, "tipos": ""})
+#         finally:
+#             driver.switch_to.default_content()
+#             fechar_popup(driver)
+#     return envolvidos, tipos_envolvimento
+
+
 def extrair_envolvidos_e_tipos(driver, erros_coleta):      
     envolvidos = []
     tipos_envolvimento = []
+
     WebDriverWait(driver, 30).until(
         EC.presence_of_all_elements_located((By.XPATH, "//a[@id='dialogDetalhesEnvolvido']"))
     )
     anchors = driver.find_elements(By.XPATH, "//a[@id='dialogDetalhesEnvolvido']")
-    for index, anchor in enumerate(anchors, start=1):
+
+    for index, anchor in enumerate(anchors, start=1):        
+        nome_envolvido = ""
         try:
             linha = anchor.find_element(By.XPATH, "./ancestor::tr")
-            texto = linha.find_element(By.XPATH, "./td[1]").text.strip()
-            if texto:
-                envolvidos.append(texto)
+            nome_envolvido = linha.find_element(By.XPATH, "./td[2]").text.strip()
+            if nome_envolvido:
+                envolvidos.append(nome_envolvido)
         except Exception as e:
             erros_coleta.append(tratar_mensagem_erro(f"Erro extraindo envolvido na linha {index}: {e}"))
+            nome_envolvido = f"Indefinido_{index}"
+
         try:
             anchor.click()
             iframe = WebDriverWait(driver, 40).until(
@@ -86,22 +152,48 @@ def extrair_envolvidos_e_tipos(driver, erros_coleta):
                 )
             )
             time.sleep(4)
-            elementos = WebDriverWait(driver, 15).until(
-                EC.presence_of_all_elements_located((By.XPATH, "//table/tbody/tr/td[1]"))
+            linhas = WebDriverWait(driver, 15).until(
+                EC.presence_of_all_elements_located((By.XPATH, "//table[@id='gridListEnvolvimento']/tbody/tr"))
             )
-            tipos = [normalize_space(elem.text) for elem in elementos if elem.text.strip()]
-            tipos_str = "; ".join(tipos)
-            tipos_envolvimento.append(tipos_str)
+
+            for i, linha in enumerate(linhas, start=1):
+                try:
+                    colunas = linha.find_elements(By.TAG_NAME, "td")
+
+                    if len(colunas) >= 2:
+                        envolvimento = normalize_space(colunas[0].text)
+                        tipo_raw = colunas[1].get_attribute("innerText")  # texto visível mesmo com imagens
+                        tipo_atendimento = normalize_space(tipo_raw)
+
+                        tipos_envolvimento.append({
+                            "nome": nome_envolvido,
+                            "envolvimento": envolvimento,
+                            "tipos": tipo_atendimento
+                        })
+                    else:
+                        erros_coleta.append(tratar_mensagem_erro(
+                            f"Linha {i} da tabela de envolvimento não possui ao menos 2 colunas"
+                        ))
+                except Exception as e:
+                    erros_coleta.append(tratar_mensagem_erro(
+                        f"Erro ao processar linha {i} da tabela de envolvimento: {e}"
+                    ))
         except Exception as e:
             if index == 1:
-                msg = f"Erro ao coletar o tipo de envolvimento do primeiro registro (linha {index}): {e}"
+                msg = f"Erro ao abrir popup do tipo de envolvimento (linha {index}): {e}"
                 print(tratar_mensagem_erro(msg))
                 erros_coleta.append(tratar_mensagem_erro(msg))
-            tipos_envolvimento.append("")
+            tipos_envolvimento.append({
+                "nome": nome_envolvido,
+                "envolvimento": "",
+                "tipos": ""
+            })
         finally:
             driver.switch_to.default_content()
             fechar_popup(driver)
-    return "; ".join(envolvidos), tipos_envolvimento
+
+    return envolvidos, tipos_envolvimento
+
 
 def extrair_veiculos_e_detalhes(driver, erros_coleta):
     veiculos = []
@@ -123,8 +215,7 @@ def extrair_veiculos_e_detalhes(driver, erros_coleta):
                     print(f"\n🔎 Processando linha {index}...")
                     placa_veiculo = linha.find_element(By.XPATH, f"./td[{idx_placa}]").text.strip()
                     veiculos.append(placa_veiculo)
-                    anchor = linha.find_element(By.XPATH, ".//a[contains(@class, 'dialogDetalhes')]")
-                    print(f"🖱️  Clicando para abrir detalhes do veículo: {placa_veiculo}")
+                    anchor = linha.find_element(By.XPATH, ".//a[contains(@class, 'dialogDetalhes')]")                    
                     anchor.click()
                     WebDriverWait(driver, 40).until(
                         EC.frame_to_be_available_and_switch_to_it(
@@ -168,12 +259,10 @@ def extrair_armas_e_detalhes(driver, erros_coleta):
                 continue
             linhas = tbl.find_elements(By.XPATH, ".//tbody/tr")
             for index, linha in enumerate(linhas, start=1):
-                try:
-                    print(f"\n🔎 Processando linha {index}...")
+                try:                    
                     info_arma = linha.find_element(By.XPATH, f"./td[{idx_calibre}]").text.strip()
                     armas.append(info_arma)
-                    anchor = linha.find_element(By.XPATH, ".//a[contains(@class, 'dialogDetalhes')]")
-                    print(f"🖱️  Clicando para abrir detalhes da arma: {info_arma}")
+                    anchor = linha.find_element(By.XPATH, ".//a[contains(@class, 'dialogDetalhes')]")                   
                     anchor.click()
                     WebDriverWait(driver, 40).until(
                         EC.frame_to_be_available_and_switch_to_it(
@@ -204,8 +293,7 @@ def extrair_armas_e_detalhes(driver, erros_coleta):
 def extrair_drogas_e_detalhes(driver, erros_coleta):
     drogas = []
     tipos_drogas = []
-    try:
-        print("🔍 Iniciando extração de drogas...")
+    try:        
         WebDriverWait(driver, 15).until(
             EC.presence_of_element_located((By.XPATH, "//label[contains(text(), 'Drogas')]"))
         )
@@ -213,8 +301,7 @@ def extrair_drogas_e_detalhes(driver, erros_coleta):
             By.XPATH,
             "//label[contains(text(), 'Drogas')]/following::table[contains(@class, 'table-striped') and contains(@class, 'table-bordered')]"
         )
-        if not tabelas_drogas:
-            print("⚠️  Nenhuma tabela de drogas encontrada após a label 'Drogas'.")
+        if not tabelas_drogas:            
             return "; ".join(drogas), tipos_drogas
         tbl = tabelas_drogas[0]
         ths = tbl.find_elements(By.XPATH, ".//thead/tr/th")
@@ -226,16 +313,14 @@ def extrair_drogas_e_detalhes(driver, erros_coleta):
                 idx_tipo = i
             elif "detalhes" in cabecalho:
                 idx_detalhes = i
-        if not idx_tipo or not idx_detalhes:
-            print("⚠️  Não foi possível localizar as colunas 'Tipo' ou 'Abrir Detalhes'.")
+        if not idx_tipo or not idx_detalhes:           
             return "; ".join(drogas), tipos_drogas
         linhas = tbl.find_elements(By.XPATH, ".//tbody/tr")
         for row_index, linha in enumerate(linhas, start=1):
             try:
                 tipo_text = linha.find_element(By.XPATH, f"./td[{idx_tipo}]").text.strip()
                 drogas.append(tipo_text)
-                anchor = linha.find_element(By.XPATH, f"./td[{idx_detalhes}]//a")
-                print(f"🖱️  Clicando para abrir detalhes da droga na linha {row_index}: {tipo_text}")
+                anchor = linha.find_element(By.XPATH, f"./td[{idx_detalhes}]//a")                
                 anchor.click()
                 WebDriverWait(driver, 40).until(
                     EC.frame_to_be_available_and_switch_to_it(
@@ -263,45 +348,58 @@ def extrair_drogas_e_detalhes(driver, erros_coleta):
         erros_coleta.append(tratar_mensagem_erro(msg))
     return "; ".join(drogas), tipos_drogas
 
+
 def extrair_tipo_situacao(driver, erros_coleta):      
     objetos = []
     tipo_situacao = []
+
     WebDriverWait(driver, 30).until(
         EC.presence_of_all_elements_located((By.XPATH, "//a[contains(@class, 'dialogDetalhesObjetoDiverso') and contains(@class, 'dialogDetalhes')]"))
     )
     anchors = driver.find_elements(By.XPATH, "//a[contains(@class, 'dialogDetalhesObjetoDiverso') and contains(@class, 'dialogDetalhes')]")
+
     for index, anchor in enumerate(anchors, start=1):
         try:
             linha = anchor.find_element(By.XPATH, "./ancestor::tr")
-            texto = linha.find_element(By.XPATH, "./td[1]").text.strip()
-            if texto:
-                objetos.append(texto)
+            texto_objeto = linha.find_element(By.XPATH, "./td[1]").text.strip()
+            objetos.append(texto_objeto)
         except Exception as e:
-            erros_coleta.append(tratar_mensagem_erro(f"Erro extraindo envolvido na linha {index}: {e}"))
+            objetos.append("")
+            erros_coleta.append(tratar_mensagem_erro(f"Erro extraindo objeto na linha {index}: {e}"))
+
         try:
             anchor.click()
+
             iframe = WebDriverWait(driver, 40).until(
                 EC.frame_to_be_available_and_switch_to_it(
                     (By.XPATH, "//iframe[contains(@src, '/sade/sade/public/objetos/view/')]")
                 )
             )
-            time.sleep(4)
+            time.sleep(2)
+
             elementos = WebDriverWait(driver, 15).until(
                 EC.presence_of_all_elements_located((By.XPATH, "//div/div[2]"))
-            )
-            tipos = [normalize_space(elem.text) for elem in elementos if elem.text.strip()]
-            tipos_str = "; ".join(tipos)
-            tipo_situacao.append(tipos_str)
+            )           
+
+            dados = [normalize_space(elem.text) for elem in elementos if elem.text.strip()]
+            dados_str = "; ".join(dados)
+
+            tipo_situacao.append({
+                "objeto": texto_objeto,
+                "dados": dados_str
+            })
+
+
         except Exception as e:
-            if index == 1:
-                msg = f"Erro ao coletar o tipo de envolvimento do primeiro registro (linha {index}): {e}"
-                print(tratar_mensagem_erro(msg))
-                erros_coleta.append(tratar_mensagem_erro(msg))
+            msg = f"Erro ao coletar tipo de situação na linha {index}: {e}"
+            print(tratar_mensagem_erro(msg))
+            erros_coleta.append(tratar_mensagem_erro(msg))
             tipo_situacao.append("")
         finally:
             driver.switch_to.default_content()
             fechar_popup(driver)
-    return "; ".join(objetos), tipo_situacao
+
+    return objetos, tipo_situacao
 
 def extrair_naturezas(driver) -> str:
     resultados = []
@@ -428,7 +526,7 @@ def coletar_a(driver, protocolo, erros_coleta):
         try:
             env_str, env_tipos = extrair_envolvidos_e_tipos(driver, erros_coleta)
             dados["envolvido"] = env_str
-            dados["tipo_envolvimento"] = "; ".join(env_tipos)
+            dados["tipo_envolvimento"] = env_tipos
         except Exception as e:
             erros_coleta.append(tratar_mensagem_erro(str(e)))
             dados["envolvido"] = dados["tipo_envolvimento"] = ""
@@ -443,18 +541,17 @@ def coletar_a(driver, protocolo, erros_coleta):
             prot_match = re.search(r"^(.*?)\s*\[", info_protocolo)
             if prot_match:
                 dados["protocolo"] = prot_match.group(1).strip()
-        
 
         try:
             objetos_str, tipo_situacao = extrair_tipo_situacao(driver, erros_coleta)
-            dados["objetos"] = objetos_str                
-            dados["tipo_situacao"] = "; ".join(tipo_situacao)                               
+            dados["objetos"] = objetos_str
+            dados["tipo_situacao"] = tipo_situacao            
         except Exception as e:
             msg = f"Erro ao extrair objetos: {e}"
             print(tratar_mensagem_erro(msg))
             erros_coleta.append(tratar_mensagem_erro(msg))
             dados["objetos"] = ""
-            dados["tipo_objetos"] = ""
+            dados["tipo_situacao"] = ""       
         
         driver.close()
         driver.switch_to.window(original)
@@ -474,6 +571,9 @@ def coletar_e(driver, protocolo, erros_coleta):
     return coletar_a(driver, protocolo, erros_coleta)
 
 def coletar_f(driver, protocolo, erros_coleta):
+    return coletar_a(driver, protocolo, erros_coleta)
+
+def coletar_ppe(driver, protocolo, erros_coleta):
     return coletar_a(driver, protocolo, erros_coleta)
     
 

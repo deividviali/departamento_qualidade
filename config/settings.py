@@ -1,8 +1,8 @@
 import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-BASE_URL = "https://treinamento.emergencia.sesdec.ro.gov.br/sade/sade/public/"
-LOGIN_URL = BASE_URL + "login"
+BASE_URL = "https://treinamento.emergencia.sesdec.ro.gov.br/sade/sade/public/index.php/login"
+LOGIN_URL = BASE_URL
 
 DB_DIR = os.path.join(BASE_DIR, os.pardir, "dbs")
 DB_PATH = os.path.join(DB_DIR, "database.sqlite")

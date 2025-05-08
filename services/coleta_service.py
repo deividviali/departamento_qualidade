@@ -146,13 +146,14 @@ def extrair_envolvidos_e_tipos(driver, erros_coleta):
 
         try:
             anchor.click()
+           
             iframe = WebDriverWait(driver, 40).until(
                 EC.frame_to_be_available_and_switch_to_it(
                     (By.XPATH, "//iframe[contains(@src, '/sade/sade/public/pessoas/view/')]")
                 )
             )
             time.sleep(4)
-            linhas = WebDriverWait(driver, 15).until(
+            linhas = WebDriverWait(driver, 40).until(
                 EC.presence_of_all_elements_located((By.XPATH, "//table[@id='gridListEnvolvimento']/tbody/tr"))
             )
 
@@ -246,8 +247,7 @@ def extrair_veiculos_e_detalhes(driver, erros_coleta):
 def extrair_armas_e_detalhes(driver, erros_coleta):
     armas = []
     tipos_armas = []
-    try:
-        print("🔍 Iniciando extração de armas...")
+    try:        
         WebDriverWait(driver, 15).until(
             EC.presence_of_all_elements_located((By.XPATH, "//table[contains(@class,'table-striped') and contains(@class,'table-bordered')]"))
         )
@@ -451,8 +451,7 @@ def coletar_a(driver, protocolo, erros_coleta):
         time.sleep(1)
         interagir_com_iframe_botao(driver, 0, "/html/body/div[5]/div[2]/div[3]/button")
         time.sleep(2)
-
-        # Abre detalhes do protocolo
+        
         try:
             interagir_com_iframe_botao(driver, 0, "//table/tbody/tr/td[10]/a[1]")
         except:

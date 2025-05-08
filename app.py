@@ -116,56 +116,117 @@ def login():
             flash('RE não encontrado.', 'error')
     return render_template('login.html')
 
+
+## Usado Somente para VM
 @app.route('/analyze', methods=['GET', 'POST'])
 def analyze():
+    print("[analyze] entrada na rota /analyze")
     if 're' not in session:
         return redirect(url_for('login'))
-    
+
     if request.method == 'GET':
         return render_template('analyze.html',
                                options=ATIVIDADES_OPCOES,
                                re=session.get('re'))
-   
-    re_val = request.form.get('re', session['re']).strip()
+
     protocolo = request.form.get('protocolo', '').strip()
     if not protocolo:
         flash('Protocolo é obrigatório.', 'error')
         return render_template('analyze.html',
                                options=ATIVIDADES_OPCOES,
                                re=session['re'])
-    
+
     escolha = request.form.get('atividade')
+    print(f"[analyze] atividade escolhida = {escolha!r}")
     if not escolha or escolha not in ATIVIDADES_OPCOES:
         flash('Selecione uma atividade válida.', 'error')
         return render_template('analyze.html',
-                            options=ATIVIDADES_OPCOES,
-                            re=session['re'])
+                               options=ATIVIDADES_OPCOES,
+                               re=session['re'])
 
-    tipos = [ATIVIDADES_OPCOES[escolha][0]]    
-    
-    print(f"DEBUG analyze: tipos = {tipos!r}")    
-
-    driver = iniciar_navegador(headless=True) #False para habilitar verificação do navegador
-    efetuar_login(driver)
+    tipos = [ATIVIDADES_OPCOES[escolha][0]]
     tarefa = Tarefa(
         protocolo=protocolo,
         re=session['re'],
         nome=session['nome'],
         pelotao=session['pelotao'],
-        atividades=tipos        
+        atividades=tipos
     )
-    print("DEBUG analyze: chamando orquestrar_tarefas")
 
-    resultados = orquestrar_tarefas(driver, tarefa)
-    for tipo, resultado in zip(tipos, resultados):
-        save_result(tipo, resultado)
-    driver.quit()
+    def generate():
+        # HTML wrapper para browser renderizar em tempo real
+        yield '<!DOCTYPE html><html><body><pre>'
+        yield 'Iniciando navegador headless...\n'
+        driver = iniciar_navegador(headless=True)
+        yield 'Driver iniciado com sucesso.\n\n'
+
+        yield 'Efetuando login...\n'
+        efetuar_login(driver)
+        yield 'Login efetuado com sucesso.\n\n'
+
+        yield 'Orquestrando tarefas...\n'
+        resultados = orquestrar_tarefas(driver, tarefa)
+        for tipo, resultado in zip(tipos, resultados):
+            save_result(tipo, resultado)
+            yield f'Resultado {tipo}: {resultado}\n'
+
+        driver.quit()
+        yield '\nProcesso concluído.\n'
+        # Fecha tags HTML
+        yield '</pre></body></html>'
+
+    return Response(stream_with_context(generate()), mimetype='text/html')
+
+# @app.route('/analyze', methods=['GET', 'POST'])
+# def analyze():
+#     if 're' not in session:
+#         return redirect(url_for('login'))
+    
+#     if request.method == 'GET':
+#         return render_template('analyze.html',
+#                                options=ATIVIDADES_OPCOES,
+#                                re=session.get('re'))
+   
+#     re_val = request.form.get('re', session['re']).strip()
+#     protocolo = request.form.get('protocolo', '').strip()
+#     if not protocolo:
+#         flash('Protocolo é obrigatório.', 'error')
+#         return render_template('analyze.html',
+#                                options=ATIVIDADES_OPCOES,
+#                                re=session['re'])
+    
+#     escolha = request.form.get('atividade')
+#     if not escolha or escolha not in ATIVIDADES_OPCOES:
+#         flash('Selecione uma atividade válida.', 'error')
+#         return render_template('analyze.html',
+#                             options=ATIVIDADES_OPCOES,
+#                             re=session['re'])
+
+#     tipos = [ATIVIDADES_OPCOES[escolha][0]]    
+    
+#     print(f"DEBUG analyze: tipos = {tipos!r}")    
+
+#     driver = iniciar_navegador(headless=False) #False para habilitar verificação do navegador
+#     efetuar_login(driver)
+#     tarefa = Tarefa(
+#         protocolo=protocolo,
+#         re=session['re'],
+#         nome=session['nome'],
+#         pelotao=session['pelotao'],
+#         atividades=tipos        
+#     )
+#     print("DEBUG analyze: chamando orquestrar_tarefas")
+
+#     resultados = orquestrar_tarefas(driver, tarefa)
+#     for tipo, resultado in zip(tipos, resultados):
+#         save_result(tipo, resultado)
+#     driver.quit()
 
     
-    return render_template(
-        'result.html',
-        resultados=zip(tipos, resultados)   
-    )
+#     return render_template(
+#         'result.html',
+#         resultados=zip(tipos, resultados)   
+#     )
 
 @app.route('/report')
 def report():

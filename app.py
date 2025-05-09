@@ -181,7 +181,6 @@ def analyze():
         }
     )
 
-
   ## Uso no PC Windons
 # @app.route('/analyze', methods=['GET', 'POST'])
 # def analyze():

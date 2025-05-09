@@ -53,64 +53,62 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.chrome.service import Service as ChromeService
-from config.settings import LOGIN_URL, USERNAME, PASSWORD, DEFAULT_TIMEOUT
+from config.settings import LOGIN_URL, DEFAULT_TIMEOUT, USERNAME, PASSWORD
 
-sys.stdout.reconfigure(line_buffering=True)
-def iniciar_navegador(headless: bool = False):    
+def find_free_display(start: int = 200) -> str:    
+    disp = start    
+    while os.path.exists(f"/tmp/.X11-unix/X{disp}"):
+        disp += 1
+    return f":{disp}"
+
+def iniciar_navegador(headless: bool = False):
     try:
         free_out = subprocess.check_output(['free', '-m']).decode()
     except Exception:
         free_out = 'Não foi possível obter stats de memória'
     print(f"[login_service] Memória disponível (MB):\n{free_out}")
+    try:
+        free_out = subprocess.check_output(['free', '-m']).decode()
+    except Exception:
+        free_out = 'Não foi possível obter stats de memória'
+    print(f"[login_service] Memória disponível (MB):\n{free_out}")   
     
-    chrome_binary = shutil.which("google-chrome-stable") or shutil.which("google-chrome") or shutil.which("chromium-browser")
-    print(f"[login_service] chrome_binary = {chrome_binary}")
-    if not chrome_binary or not os.path.exists(chrome_binary):
-        raise RuntimeError(f"Binário do Chrome não encontrado: {chrome_binary}")
-    
+    xvfb_bin = shutil.which("Xvfb") or "/usr/bin/Xvfb"
+    display = find_free_display(200)
+    xvfb_cmd = [xvfb_bin, display, "-screen", "0", "1920x1080x24"]
+    xvfb_proc = subprocess.Popen(
+        xvfb_cmd,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL
+    )   
+    os.environ["DISPLAY"] = display
+    print(f"[login_service] Xvfb iniciado no display {display}")  
+
+    chrome_binary = (
+        shutil.which("google-chrome-stable")
+        or shutil.which("google-chrome")
+        or shutil.which("chromium-browser")
+    )
+    if not chrome_binary:
+        raise RuntimeError("Binário do Chrome não encontrado")
+
     options = ChromeOptions()
     options.binary_location = chrome_binary
-    
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
+    if headless:
+        options.add_argument("--headless=new")
+        options.add_argument("--window-size=1920,1080")    
     
-    prefs = {"profile.managed_default_content_settings.images": 2}
-    options.add_experimental_option("prefs", prefs)
-    options.accept_insecure_certs = True    
-    options.page_load_strategy = 'eager'
-   
     driver_path = shutil.which("chromedriver") or "/usr/bin/chromedriver"
-    log_file = "/var/log/chromedriver.log"
-    print(f"[login_service] Usando chromedriver em {driver_path}")
-    print(f"[login_service] Logs do chromedriver em {log_file}")
-
-    service = ChromeService(
-        executable_path=driver_path,
-        log_path=log_file,
-    )
-   
-    try:
-        print("[login_service] Instanciando Chrome WebDriver via Xvfb...")
-        driver = webdriver.Chrome(service=service, options=options)
-        print("[login_service] WebDriver Chrome instanciado com sucesso")
-    except WebDriverException as e:
-        print(f"[login_service] Erro na instanciação do WebDriver Chrome: {e}")
-        raise
+    service = ChromeService(executable_path=driver_path, log_path="/var/log/chromedriver.log")
+    driver = webdriver.Chrome(service=service, options=options)
+    print("[login_service] WebDriver Chrome instanciado com sucesso") 
     
+    driver.xvfb_proc = xvfb_proc    
     driver.set_page_load_timeout(DEFAULT_TIMEOUT)
-   
-    try:
-        print(f"[login_service] Navegando para {LOGIN_URL}...")
-        driver.get(LOGIN_URL)
-        print("[login_service] Página de login carregada")
-    except TimeoutException:
-        print("[login_service] Timeout carregando a página de login")
-        raise
-    except WebDriverException as e:
-        print(f"[login_service] Erro ao navegar para login: {e}")
-        raise
-
+    driver.get(LOGIN_URL)
     return driver
 
 
@@ -160,7 +158,11 @@ def fechar_navegador(driver):
         driver.quit()
         print("[login_service] Navegador fechado")
     except Exception as e:
-        print(f"[login_service] Erro ao fechar navegador: {e}")
-
-
-    
+        print(f"[login_service] Erro ao fechar navegador: {e}")    
+    if hasattr(driver, "xvfb_proc"):
+        try:
+            driver.xvfb_proc.terminate()
+            driver.xvfb_proc.wait(timeout=5)
+            print(f"[login_service] Xvfb no display {os.environ.get('DISPLAY')} finalizado")
+        except Exception:
+            print("[login_service] Não foi possível finalizar o Xvfb")

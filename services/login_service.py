@@ -1,4 +1,4 @@
-# services/login_service.py
+#services/login_service.py
 
 # from selenium.webdriver.common.by import By
 # from selenium.webdriver.support.ui import WebDriverWait
@@ -40,13 +40,12 @@
 
 
 
-#Funciona na VM
+     ###Funciona na VM
 import os
 import time
 import shutil
 import subprocess
 import sys
-
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -54,12 +53,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.chrome.service import Service as ChromeService
-
 from config.settings import LOGIN_URL, USERNAME, PASSWORD, DEFAULT_TIMEOUT
 
-# Force unbuffered stdout for immediate logging
 sys.stdout.reconfigure(line_buffering=True)
-
 def iniciar_navegador(headless: bool = False):    
     try:
         free_out = subprocess.check_output(['free', '-m']).decode()

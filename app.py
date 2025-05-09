@@ -177,6 +177,8 @@ def analyze():
 
     return Response(stream_with_context(generate()), mimetype='text/html')
 
+
+  ## Uso no PC Windons
 # @app.route('/analyze', methods=['GET', 'POST'])
 # def analyze():
 #     if 're' not in session:

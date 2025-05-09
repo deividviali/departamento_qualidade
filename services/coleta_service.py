@@ -63,343 +63,457 @@ def extrair_campos(driver, xpaths_campos, erros_coleta):
             dados[campo] = ""
     return dados
 
-# def extrair_envolvidos_e_tipos(driver, erros_coleta):      
-#     envolvidos = []
-#     tipos_envolvimento = []
-#     WebDriverWait(driver, 30).until(
-#         EC.presence_of_all_elements_located((By.XPATH, "//a[@id='dialogDetalhesEnvolvido']"))
-#     )
-#     anchors = driver.find_elements(By.XPATH, "//a[@id='dialogDetalhesEnvolvido']")
-#     for index, anchor in enumerate(anchors, start=1):        
-#         try:
-#             linha = anchor.find_element(By.XPATH, "./ancestor::tr")
-#             texto = linha.find_element(By.XPATH, "./td[2]").text.strip()
-#             if texto:
-#                 envolvidos.append(texto)
-#         except Exception as e:
-#             erros_coleta.append(tratar_mensagem_erro(f"Erro extraindo envolvido na linha {index}: {e}"))
-#         try:
-#             anchor.click()
-#             iframe = WebDriverWait(driver, 40).until(
-#                 EC.frame_to_be_available_and_switch_to_it(
-#                     (By.XPATH, "//iframe[contains(@src, '/sade/sade/public/pessoas/view/')]")
-#                 )
-#             )
-#             time.sleep(4)
-#             linhas = WebDriverWait(driver, 15).until(
-#                 EC.presence_of_all_elements_located((By.XPATH, "//table[@id='gridListEnvolvimento']/tbody/tr"))
-#             )
-
-#             for index, linha in enumerate(linhas, start=1):
-#                 try:
-#                     colunas = linha.find_elements(By.TAG_NAME, "td")
-
-#                     if len(colunas) >= 2:
-#                         envolvimento = normalize_space(colunas[0].text)
-#                         tipo_raw = colunas[1].get_attribute("innerText")  # captura texto visível (mesmo com img)
-#                         tipo_atendimento = normalize_space(tipo_raw)
-
-#                         tipos_envolvimento.append({
-#                             "texto": envolvimento,
-#                             "tipos": tipo_atendimento
-#                         })
-#                     else:
-#                         erros_coleta.append(tratar_mensagem_erro(
-#                             f"Linha {index} da tabela de envolvimento não possui ao menos 2 colunas"
-#                         ))
-#                 except Exception as e:
-#                     erros_coleta.append(tratar_mensagem_erro(
-#                         f"Erro ao processar linha {index} da tabela de envolvimento: {e}"
-#                     ))
-
-#         except Exception as e:
-#             if index == 1:
-#                 msg = f"Erro ao coletar o tipo de envolvimento do primeiro registro (linha {index}): {e}"
-#                 print(tratar_mensagem_erro(msg))
-#                 erros_coleta.append(tratar_mensagem_erro(msg))
-#             tipos_envolvimento.append({"texto": texto, "tipos": ""})
-#         finally:
-#             driver.switch_to.default_content()
-#             fechar_popup(driver)
-#     return envolvidos, tipos_envolvimento
-
-
-def extrair_envolvidos_e_tipos(driver, erros_coleta):      
+def extrair_envolvidos_e_tipos(driver, erros_coleta):
     envolvidos = []
     tipos_envolvimento = []
-
     WebDriverWait(driver, 30).until(
         EC.presence_of_all_elements_located((By.XPATH, "//a[@id='dialogDetalhesEnvolvido']"))
     )
     anchors = driver.find_elements(By.XPATH, "//a[@id='dialogDetalhesEnvolvido']")
 
-    for index, anchor in enumerate(anchors, start=1):        
-        nome_envolvido = ""
+    for index, anchor in enumerate(anchors, start=1):
+        nome_envolvido = f"Indefinido_{index}"
+        
         try:
-            linha = anchor.find_element(By.XPATH, "./ancestor::tr")
-            nome_envolvido = linha.find_element(By.XPATH, "./td[2]").text.strip()
-            if nome_envolvido:
-                envolvidos.append(nome_envolvido)
+            linha_mae = anchor.find_element(By.XPATH, "./ancestor::tr")
+            nome = linha_mae.find_element(By.XPATH, "./td[2]").text.strip()
+            if nome:
+                nome_envolvido = nome
+                envolvidos.append(nome)
         except Exception as e:
-            erros_coleta.append(tratar_mensagem_erro(f"Erro extraindo envolvido na linha {index}: {e}"))
-            nome_envolvido = f"Indefinido_{index}"
-
+            erros_coleta.append(
+                tratar_mensagem_erro(f"Erro extraindo nome (linha {index}): {e}")
+            )
+        
+        abriu = False
         try:
-            anchor.click()
-           
-            iframe = WebDriverWait(driver, 40).until(
-                EC.frame_to_be_available_and_switch_to_it(
-                    (By.XPATH, "//iframe[contains(@src, '/sade/sade/public/pessoas/view/')]")
+            driver.execute_script("arguments[0].scrollIntoView(true);", anchor)
+            driver.execute_script("arguments[0].click();", anchor)
+            
+            iframe_el = WebDriverWait(driver, 20).until(
+                EC.presence_of_element_located((By.XPATH, "//iframe[contains(@src, '/sade/sade/public/pessoas/view/') or contains(@src, '/sade/sade/public')]"))
+            )
+            driver.switch_to.frame(iframe_el)
+            abriu = True
+            
+            time.sleep(2)
+        except Exception as e:
+            erros_coleta.append(
+                tratar_mensagem_erro(
+                    f"Erro ao abrir popup ou entrar no frame (linha {index}): {e}"
                 )
             )
-            time.sleep(4)
-            linhas = WebDriverWait(driver, 40).until(
-                EC.presence_of_all_elements_located((By.XPATH, "//table[@id='gridListEnvolvimento']/tbody/tr"))
-            )
-
-            for i, linha in enumerate(linhas, start=1):
-                try:
-                    colunas = linha.find_elements(By.TAG_NAME, "td")
-
-                    if len(colunas) >= 2:
-                        envolvimento = normalize_space(colunas[0].text)
-                        tipo_raw = colunas[1].get_attribute("innerText")  # texto visível mesmo com imagens
-                        tipo_atendimento = normalize_space(tipo_raw)
-
+       
+        if abriu:
+            try:
+                linhas = WebDriverWait(driver, 20).until(
+                    EC.presence_of_all_elements_located(
+                        (By.XPATH, "//table[@id='gridListEnvolvimento']/tbody/tr")
+                    )
+                )
+                for idx, linha in enumerate(linhas, start=1):
+                    try:
+                        envolvimento = linha.find_element(By.XPATH, "./td[1]").text.strip()
+                        tipo = linha.find_element(By.XPATH, "./td[2]").text.strip()
                         tipos_envolvimento.append({
                             "nome": nome_envolvido,
                             "envolvimento": envolvimento,
-                            "tipos": tipo_atendimento
+                            "tipos": tipo
                         })
-                    else:
-                        erros_coleta.append(tratar_mensagem_erro(
-                            f"Linha {i} da tabela de envolvimento não possui ao menos 2 colunas"
-                        ))
-                except Exception as e:
-                    erros_coleta.append(tratar_mensagem_erro(
-                        f"Erro ao processar linha {i} da tabela de envolvimento: {e}"
-                    ))
-        except Exception as e:
-            if index == 1:
-                msg = f"Erro ao abrir popup do tipo de envolvimento (linha {index}): {e}"
-                print(tratar_mensagem_erro(msg))
-                erros_coleta.append(tratar_mensagem_erro(msg))
-            tipos_envolvimento.append({
-                "nome": nome_envolvido,
-                "envolvimento": "",
-                "tipos": ""
-            })
-        finally:
+                    except Exception as e:
+                        erros_coleta.append(
+                            tratar_mensagem_erro(
+                                f"Erro extraindo coluna (linha {idx}, envolvido {nome_envolvido}): {e}"
+                            )
+                        )
+            except Exception as e:
+                erros_coleta.append(
+                    tratar_mensagem_erro(
+                        f"Erro ao localizar linhas da tabela (linha {index}): {e}"
+                    )
+                )        
+        try:
             driver.switch_to.default_content()
             fechar_popup(driver)
+        except Exception as e:
+            erros_coleta.append(
+                tratar_mensagem_erro(f"Erro ao fechar popup (linha {index}): {e}")
+            )
 
     return envolvidos, tipos_envolvimento
-
 
 def extrair_veiculos_e_detalhes(driver, erros_coleta):
     veiculos = []
     tipos_veiculos = []
+
     try:
         print("🔍 Iniciando extração de veículos...")
         WebDriverWait(driver, 15).until(
-            EC.presence_of_all_elements_located((By.XPATH, "//table[contains(@class,'table-striped') and contains(@class,'table-bordered')]"))
+            EC.presence_of_all_elements_located((
+                By.XPATH,
+                "//table[contains(@class,'table-striped') and contains(@class,'table-bordered')]"
+            ))
         )
-        tables = driver.find_elements(By.XPATH, "//table[contains(@class,'table-striped') and contains(@class,'table-bordered')]")
+        tables = driver.find_elements(
+            By.XPATH,
+            "//table[contains(@class,'table-striped') and contains(@class,'table-bordered')]"
+        )
         for tbl in tables:
             headers = tbl.find_elements(By.XPATH, ".//thead/tr/th")
-            idx_placa = next((i+1 for i, th in enumerate(headers) if "placa" in th.text.lower()), None)
+            idx_placa = next(
+                (i+1 for i, th in enumerate(headers) if "placa" in th.text.lower()),
+                None
+            )
             if not idx_placa:
                 continue
+
             linhas = tbl.find_elements(By.XPATH, ".//tbody/tr")
-            for index, linha in enumerate(linhas, start=1):
+            for row_index, linha in enumerate(linhas, start=1):
+                placa_text = ""
+                detalhes = ""
                 try:
-                    print(f"\n🔎 Processando linha {index}...")
-                    placa_veiculo = linha.find_element(By.XPATH, f"./td[{idx_placa}]").text.strip()
-                    veiculos.append(placa_veiculo)
-                    anchor = linha.find_element(By.XPATH, ".//a[contains(@class, 'dialogDetalhes')]")                    
-                    anchor.click()
-                    WebDriverWait(driver, 40).until(
-                        EC.frame_to_be_available_and_switch_to_it(
-                            (By.XPATH, "//iframe[contains(@src, '/sade/sade/public/veiculos/view/')]")
-                        )
+                    print(f"\n🔎 Processando veículo, linha {row_index}...")
+                    placa_text = linha.find_element(
+                        By.XPATH, f"./td[{idx_placa}]"
+                    ).text.strip()
+                    veiculos.append(placa_text)
+                    anchor = linha.find_element(
+                        By.XPATH, ".//a[contains(@class,'dialogDetalhes')]"
                     )
-                    time.sleep(2)
-                    elementos = WebDriverWait(driver, 15).until(
-                        EC.presence_of_all_elements_located((By.XPATH, "//body/div/div[1]/div[5]"))
+                    driver.execute_script("arguments[0].scrollIntoView(true);", anchor)
+                    driver.execute_script("arguments[0].click();", anchor)
+                    frames = driver.find_elements(By.TAG_NAME, "iframe")
+                    print(f"[DEBUG Veículos linha {row_index}] Encontrei {len(frames)} iframes:")
+                    for idx_f, f in enumerate(frames, start=1):
+                        src = f.get_attribute("src") or ""
+                        print(f"  Frame {idx_f}: src = {src}")
+                        if "/veiculos/view/" in src:
+                            driver.switch_to.frame(f)
+                            break
+                    else:
+                        raise RuntimeError("Iframe '/veiculos/view/' não encontrado.")
+                    time.sleep(1)
+                    body_html = driver.find_element(By.TAG_NAME, "body") \
+                                      .get_attribute("innerHTML")[:500]
+                    print(f"[DEBUG Veículos frame #{row_index}]\n{body_html}\n…")
+                    elementos = driver.find_elements(
+                        By.XPATH,
+                        "//body/div/div[1]/div[5]"
                     )
-                    tipos = [normalize_space(elem.text) for elem in elementos if elem.text.strip()]
-                    tipos_veiculos.append("; ".join(tipos) if tipos else "")
+                    if not elementos:
+                        elementos = driver.find_elements(By.XPATH, "//body/div/div")
+
+                    print(f"[DEBUG Veículos linha {row_index}] Achei {len(elementos)} elementos para detalhes")
+
+                    textos = []
+                    for elem in elementos:
+                        txt = elem.text.strip()
+                        if txt:
+                            textos.append(normalize_space(txt))
+                    detalhes = "; ".join(textos)
+                    tipos_veiculos.append(detalhes)
+
                 except Exception as e:
-                    msg = f"❌ Erro ao extrair detalhes do veículo na linha {index}: {e}"
+                    msg = f"❌ Erro ao extrair detalhes do veículo na linha {row_index}: {e}"
                     print(tratar_mensagem_erro(msg))
                     erros_coleta.append(tratar_mensagem_erro(msg))
-                    veiculos.append("")
+                    if not placa_text:
+                        veiculos.append("")
                     tipos_veiculos.append("")
                 finally:
-                    driver.switch_to.default_content()
-                    fechar_popup(driver)
+                    try:
+                        driver.switch_to.default_content()
+                        fechar_popup(driver)
+                    except Exception:
+                        print(f"[WARN] falha ao fechar popup na linha {row_index}")
+
     except Exception as e:
         msg = f"❌ Erro geral ao extrair veículos: {e}"
         print(tratar_mensagem_erro(msg))
         erros_coleta.append(tratar_mensagem_erro(msg))
+
     return "; ".join(veiculos), tipos_veiculos
+
 
 def extrair_armas_e_detalhes(driver, erros_coleta):
     armas = []
     tipos_armas = []
     try:        
         WebDriverWait(driver, 15).until(
-            EC.presence_of_all_elements_located((By.XPATH, "//table[contains(@class,'table-striped') and contains(@class,'table-bordered')]"))
+            EC.presence_of_all_elements_located((
+                By.XPATH,
+                "//table[contains(@class,'table-striped') and contains(@class,'table-bordered')]"
+            ))
         )
-        tables = driver.find_elements(By.XPATH, "//table[contains(@class,'table-striped') and contains(@class,'table-bordered')]")
+        tables = driver.find_elements(
+            By.XPATH,
+            "//table[contains(@class,'table-striped') and contains(@class,'table-bordered')]"
+        )
         for tbl in tables:
             headers = tbl.find_elements(By.XPATH, ".//thead/tr/th")
-            idx_calibre = next((i+1 for i, th in enumerate(headers) if "calibre" in th.text.lower()), None)
+            idx_calibre = next(
+                (i+1 for i, th in enumerate(headers) if "calibre" in th.text.lower()),
+                None
+            )
             if not idx_calibre:
-                continue
+                continue 
             linhas = tbl.find_elements(By.XPATH, ".//tbody/tr")
-            for index, linha in enumerate(linhas, start=1):
-                try:                    
-                    info_arma = linha.find_element(By.XPATH, f"./td[{idx_calibre}]").text.strip()
-                    armas.append(info_arma)
-                    anchor = linha.find_element(By.XPATH, ".//a[contains(@class, 'dialogDetalhes')]")                   
-                    anchor.click()
-                    WebDriverWait(driver, 40).until(
-                        EC.frame_to_be_available_and_switch_to_it(
-                            (By.XPATH, "//iframe[contains(@src, '/sade/sade/public/armas/view/')]")
-                        )
+            for row_index, linha in enumerate(linhas, start=1):
+                arma_text = ""
+                detalhes = ""
+                try:
+                    arma_text = linha.find_element(
+                        By.XPATH, f"./td[{idx_calibre}]"
+                    ).text.strip()
+                    armas.append(arma_text)
+                    anchor = linha.find_element(
+                        By.XPATH, ".//a[contains(@class, 'dialogDetalhes')]"
                     )
-                    time.sleep(2)
+                    driver.execute_script("arguments[0].scrollIntoView(true);", anchor)
+                    driver.execute_script("arguments[0].click();", anchor)
+                    frames = driver.find_elements(By.TAG_NAME, "iframe")
+                    print(f"[DEBUG Armas linha {row_index}] Encontrei {len(frames)} iframes:")
+                    for idx_f, f in enumerate(frames, start=1):
+                        src = f.get_attribute("src") or ""
+                        print(f"  Frame {idx_f}: src = {src}")
+                        if "/armas/view/" in src:
+                            driver.switch_to.frame(f)
+                            break
+                    else:
+                        raise RuntimeError("Iframe '/armas/view/' não encontrado.")
+                    time.sleep(1)
+                    body_html = driver.find_element(By.TAG_NAME, "body") \
+                                      .get_attribute("innerHTML")[:500]
+                    print(f"[DEBUG Armas frame #{row_index}]\n{body_html}\n…")
                     elementos = WebDriverWait(driver, 15).until(
-                        EC.presence_of_all_elements_located((By.XPATH, "//body/div/div"))
+                        EC.presence_of_all_elements_located((
+                            By.XPATH, "//body/div/div"
+                        ))
                     )
-                    tipos = [normalize_space(elem.text) for elem in elementos if elem.text.strip()]
-                    tipos_armas.append("; ".join(tipos) if tipos else "")
+                    print(f"[DEBUG Armas linha {row_index}] Achei {len(elementos)} elementos em //body/div/div")
+
+                    textos = []
+                    for elem in elementos:
+                        txt = elem.text.strip()
+                        if txt:
+                            textos.append(normalize_space(txt))
+                    detalhes = "; ".join(textos)
+
+                    tipos_armas.append(detalhes)
+
                 except Exception as e:
-                    msg = f"❌ Erro ao extrair detalhes da arma na linha {index}: {e}"
+                    msg = f"❌ Erro ao extrair detalhes da arma na linha {row_index}: {e}"
                     print(tratar_mensagem_erro(msg))
                     erros_coleta.append(tratar_mensagem_erro(msg))
-                    armas.append("")
+                    if not arma_text:
+                        armas.append("")
                     tipos_armas.append("")
                 finally:
-                    driver.switch_to.default_content()
-                    fechar_popup(driver)
+                    try:
+                        driver.switch_to.default_content()
+                        fechar_popup(driver)
+                    except Exception:
+                        print(f"[WARN] falha ao fechar popup na linha {row_index}")
+
     except Exception as e:
-        msg = f"❌ Erro geral ao extrair arma: {e}"
+        msg = f"❌ Erro geral ao extrair armas: {e}"
         print(tratar_mensagem_erro(msg))
         erros_coleta.append(tratar_mensagem_erro(msg))
+
     return "; ".join(armas), tipos_armas
+
 
 def extrair_drogas_e_detalhes(driver, erros_coleta):
     drogas = []
     tipos_drogas = []
+
     try:        
         WebDriverWait(driver, 15).until(
-            EC.presence_of_element_located((By.XPATH, "//label[contains(text(), 'Drogas')]"))
-        )
-        tabelas_drogas = driver.find_elements(
+            EC.presence_of_element_located(
+                (By.XPATH, "//label[contains(text(), 'Drogas')]")
+            )
+        )        
+        tabelas = driver.find_elements(
             By.XPATH,
-            "//label[contains(text(), 'Drogas')]/following::table[contains(@class, 'table-striped') and contains(@class, 'table-bordered')]"
+            "//label[contains(text(), 'Drogas')]/following::table"
+            "[contains(@class,'table-striped') and contains(@class,'table-bordered')]"
         )
-        if not tabelas_drogas:            
+        if not tabelas:
             return "; ".join(drogas), tipos_drogas
-        tbl = tabelas_drogas[0]
-        ths = tbl.find_elements(By.XPATH, ".//thead/tr/th")
-        idx_tipo = None
-        idx_detalhes = None
+
+        tbl = tabelas[0]
+        ths = tbl.find_elements(By.XPATH, ".//thead/tr/th")       
+        idx_tipo = idx_detalhes = None
         for i, th in enumerate(ths, start=1):
-            cabecalho = th.text.strip().lower()
-            if "tipo" in cabecalho:
+            h = th.text.strip().lower()
+            if "tipo" in h:
                 idx_tipo = i
-            elif "detalhes" in cabecalho:
+            elif "detalhes" in h:
                 idx_detalhes = i
-        if not idx_tipo or not idx_detalhes:           
+        if not idx_tipo or not idx_detalhes:
             return "; ".join(drogas), tipos_drogas
+
         linhas = tbl.find_elements(By.XPATH, ".//tbody/tr")
+
         for row_index, linha in enumerate(linhas, start=1):
-            try:
-                tipo_text = linha.find_element(By.XPATH, f"./td[{idx_tipo}]").text.strip()
-                drogas.append(tipo_text)
-                anchor = linha.find_element(By.XPATH, f"./td[{idx_detalhes}]//a")                
-                anchor.click()
-                WebDriverWait(driver, 40).until(
-                    EC.frame_to_be_available_and_switch_to_it(
-                        (By.XPATH, "//iframe[contains(@src, '/sade/sade/public/drogas/view/')]")
+            droga = ""
+            detalhes = ""
+            try:                
+                tipo_text = linha.find_element(
+                    By.XPATH, f"./td[{idx_tipo}]"
+                ).text.strip()
+                droga = tipo_text
+                drogas.append(tipo_text)                
+                anchor = linha.find_element(
+                    By.XPATH, f"./td[{idx_detalhes}]//a"
+                )
+                driver.execute_script("arguments[0].scrollIntoView(true);", anchor)
+                driver.execute_script("arguments[0].click();", anchor)
+                frames = driver.find_elements(By.TAG_NAME, "iframe")
+                print(f"[DEBUG Drogas linha {row_index}] Encontrei {len(frames)} iframes:")
+                for idx_f, f in enumerate(frames, start=1):
+                    src = f.get_attribute("src") or ""
+                    print(f"  Frame {idx_f}: src = {src}")
+                    if "/drogas/view/" in src:
+                        driver.switch_to.frame(f)
+                        break
+                else:
+                    raise RuntimeError("Iframe '/drogas/view/' não encontrado.")
+                time.sleep(1)
+                body_html = driver.find_element(By.TAG_NAME, "body") \
+                                  .get_attribute("innerHTML")[:500]
+                print(f"[DEBUG Drogas frame #{row_index}]\n{body_html}\n…")
+                elementos = WebDriverWait(driver, 15).until(
+                    EC.presence_of_all_elements_located(
+                        (By.XPATH, "//body/div/div")
                     )
                 )
-                time.sleep(2)
-                elementos = WebDriverWait(driver, 15).until(
-                    EC.presence_of_all_elements_located((By.XPATH, "//body/div/div"))
-                )
-                tipos = [normalize_space(elem.text) for elem in elementos if elem.text.strip()]
-                tipos_drogas.append("; ".join(tipos) if tipos else "")
+                print(f"[DEBUG Drogas linha {row_index}] Achei {len(elementos)} elementos dentro de //body/div/div")
+
+                textos = []
+                for elem in elementos:
+                    txt = elem.text.strip()
+                    if txt:
+                        textos.append(normalize_space(txt))
+
+                detalhes = "; ".join(textos)
+                tipos_drogas.append(detalhes)
+
             except Exception as e:
                 msg = f"❌ Erro ao extrair detalhes da droga na linha {row_index}: {e}"
                 print(tratar_mensagem_erro(msg))
                 erros_coleta.append(tratar_mensagem_erro(msg))
-                drogas.append("")
+                if not droga:
+                    drogas.append("")
                 tipos_drogas.append("")
+
             finally:
-                driver.switch_to.default_content()
-                fechar_popup(driver)
+                try:
+                    driver.switch_to.default_content()
+                    fechar_popup(driver)
+                except Exception:
+                    print(f"[WARN] falha ao fechar popup na linha {row_index}")
+
     except Exception as e:
         msg = f"❌ Erro geral ao extrair drogas: {e}"
         print(tratar_mensagem_erro(msg))
         erros_coleta.append(tratar_mensagem_erro(msg))
+
     return "; ".join(drogas), tipos_drogas
 
 
-def extrair_tipo_situacao(driver, erros_coleta):      
+def extrair_tipo_situacao(driver, erros_coleta):
     objetos = []
     tipo_situacao = []
-
     WebDriverWait(driver, 30).until(
-        EC.presence_of_all_elements_located((By.XPATH, "//a[contains(@class, 'dialogDetalhesObjetoDiverso') and contains(@class, 'dialogDetalhes')]"))
+        EC.presence_of_all_elements_located((
+            By.XPATH,
+            "//a[contains(@class,'dialogDetalhesObjetoDiverso') and contains(@class,'dialogDetalhes')]"
+        ))
     )
-    anchors = driver.find_elements(By.XPATH, "//a[contains(@class, 'dialogDetalhesObjetoDiverso') and contains(@class, 'dialogDetalhes')]")
+    anchors = driver.find_elements(
+        By.XPATH,
+        "//a[contains(@class,'dialogDetalhesObjetoDiverso') and contains(@class,'dialogDetalhes')]"
+    )
 
     for index, anchor in enumerate(anchors, start=1):
+        objeto_nome = f"Indefinido_{index}"
         try:
             linha = anchor.find_element(By.XPATH, "./ancestor::tr")
-            texto_objeto = linha.find_element(By.XPATH, "./td[1]").text.strip()
-            objetos.append(texto_objeto)
+            nome = linha.find_element(By.XPATH, "./td[1]").text.strip()
+            if nome:
+                objeto_nome = nome
         except Exception as e:
-            objetos.append("")
-            erros_coleta.append(tratar_mensagem_erro(f"Erro extraindo objeto na linha {index}: {e}"))
-
-        try:
-            anchor.click()
-
-            iframe = WebDriverWait(driver, 40).until(
-                EC.frame_to_be_available_and_switch_to_it(
-                    (By.XPATH, "//iframe[contains(@src, '/sade/sade/public/objetos/view/')]")
-                )
+            erros_coleta.append(
+                tratar_mensagem_erro(f"Erro extraindo nome de objeto (linha {index}): {e}")
             )
-            time.sleep(2)
+        objetos.append(objeto_nome)
+        entrou_frame = False
+        try:
+            driver.execute_script("arguments[0].scrollIntoView(true);", anchor)
+            driver.execute_script("arguments[0].click();", anchor)
+            frames = driver.find_elements(By.TAG_NAME, "iframe")
+            for idx_f, f in enumerate(frames, start=1):
+                src = f.get_attribute("src") or ""
+                print(f"[DEBUG] Frame {idx_f}: src = {src}")
+                if "/objetos/view/" in src:
+                    driver.switch_to.frame(f)
+                    entrou_frame = True
+                    break
 
-            elementos = WebDriverWait(driver, 15).until(
-                EC.presence_of_all_elements_located((By.XPATH, "//div/div[2]"))
-            )           
-
-            dados = [normalize_space(elem.text) for elem in elementos if elem.text.strip()]
-            dados_str = "; ".join(dados)
-
-            tipo_situacao.append({
-                "objeto": texto_objeto,
-                "dados": dados_str
-            })
-
-
+            if not entrou_frame:
+                raise RuntimeError("Iframe '/objetos/view/' não encontrado.")
+            time.sleep(1)
         except Exception as e:
-            msg = f"Erro ao coletar tipo de situação na linha {index}: {e}"
-            print(tratar_mensagem_erro(msg))
-            erros_coleta.append(tratar_mensagem_erro(msg))
-            tipo_situacao.append("")
-        finally:
+            erros_coleta.append(
+                tratar_mensagem_erro(f"Erro abrindo frame (linha {index}): {e}")
+            )
+        if entrou_frame:
+            try:
+                body_html = driver.find_element(By.TAG_NAME, "body") \
+                                  .get_attribute("innerHTML")[:500]
+                print(f"[DEBUG frame #{index}]\n{body_html}\n…")
+                rows = driver.find_elements(By.XPATH, ".//div[contains(@class,'row-fluid')]")
+                if not rows:
+                    rows = driver.find_elements(By.XPATH, "//table/tbody/tr")
+
+                print(f"[DEBUG] Achei {len(rows)} linhas no frame")
+
+                valores = []
+                for row in rows:
+                    text = None                    
+                    try:
+                        text = row.find_element(By.XPATH, "./div[2]").text.strip()
+                    except Exception:                        
+                        try:
+                            text = row.find_element(By.XPATH, "./td[2]").text.strip()
+                        except Exception:
+                            continue
+                    if text:
+                        valores.append(normalize_space(text))
+
+                dados_str = "; ".join(valores)
+                tipo_situacao.append({
+                    "objeto": objeto_nome,
+                    "dados": dados_str
+                })
+
+            except Exception as e:
+                erros_coleta.append(
+                    tratar_mensagem_erro(f"Erro extraindo dados (linha {index}): {e}")
+                )
+                tipo_situacao.append({
+                    "objeto": objeto_nome,
+                    "dados": ""
+                })
+        try:
             driver.switch_to.default_content()
             fechar_popup(driver)
+        except Exception:
+            pass
 
     return objetos, tipo_situacao
+
 
 def extrair_naturezas(driver) -> str:
     resultados = []

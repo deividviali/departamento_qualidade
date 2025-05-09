@@ -28,7 +28,7 @@ ATIVIDADES_OPCOES = {
     '4': ('D', 'Atividade D'),
     '5': ('E', 'Atividade E'),
     '6': ('F', 'Atividade F'),
-    '7': ('PPE', 'Prova Prática de Execução'),   
+    #'7': ('PPE', 'Prova Prática de Execução'),   
     
 }
 
@@ -120,16 +120,15 @@ def login():
 ## Usado Somente para VM
 @app.route('/analyze', methods=['GET', 'POST'])
 def analyze():
-    print("[analyze] entrada na rota /analyze")
     if 're' not in session:
         return redirect(url_for('login'))
 
     if request.method == 'GET':
         return render_template('analyze.html',
                                options=ATIVIDADES_OPCOES,
-                               re=session.get('re'))
+                               re=session['re'])
 
-    protocolo = request.form.get('protocolo', '').strip()
+    protocolo = request.form.get('protocolo','').strip()
     if not protocolo:
         flash('Protocolo é obrigatório.', 'error')
         return render_template('analyze.html',
@@ -137,7 +136,6 @@ def analyze():
                                re=session['re'])
 
     escolha = request.form.get('atividade')
-    print(f"[analyze] atividade escolhida = {escolha!r}")
     if not escolha or escolha not in ATIVIDADES_OPCOES:
         flash('Selecione uma atividade válida.', 'error')
         return render_template('analyze.html',
@@ -153,29 +151,35 @@ def analyze():
         atividades=tipos
     )
 
-    def generate():
-        # HTML wrapper para browser renderizar em tempo real
-        yield '<!DOCTYPE html><html><body><pre>'
-        yield 'Iniciando navegador headless...\n'
-        driver = iniciar_navegador(headless=True)
-        yield 'Driver iniciado com sucesso.\n\n'
-
-        yield 'Efetuando login...\n'
+    def generate():        
+        yield render_template('analyze_stream_header.html',
+                              options=ATIVIDADES_OPCOES,
+                              re=session['re'])        
+        yield "<script>appendLog('Iniciando navegador do SISEG Treinamento');</script>"
+        driver = iniciar_navegador(headless=True) 
+        yield "<script>appendLog('Efetuando login no SISEG');</script>"
         efetuar_login(driver)
-        yield 'Login efetuado com sucesso.\n\n'
-
-        yield 'Orquestrando tarefas...\n'
+        yield "<script>appendLog('Login efetuado com sucesso.');</script>"
+        yield "<script>appendLog('Iniciando coleta de dados da ocorrência no SISEG');</script>"
+        yield "<script>mostrarCarregando();</script>"
         resultados = orquestrar_tarefas(driver, tarefa)
         for tipo, resultado in zip(tipos, resultados):
             save_result(tipo, resultado)
-            yield f'Resultado {tipo}: {resultado}\n'
-
+            yield f"<script>appendLog('Resultado {tipo}: {resultado}');</script>"
         driver.quit()
-        yield '\nProcesso concluído.\n'
-        # Fecha tags HTML
-        yield '</pre></body></html>'
-
-    return Response(stream_with_context(generate()), mimetype='text/html')
+        yield "<script>appendLog('Processo concluído.');</script>"
+        yield "<script>appendLog('Processo concluído.');</script>"        
+        target = url_for('report')   
+        yield f"<script>setTimeout(()=>window.location.href='{target}', 500);</script>"       
+        yield "</body></html>"
+    return Response(
+        stream_with_context(generate()),
+        mimetype='text/html',
+        headers={
+            'Cache-Control':   'no-cache',
+            'X-Accel-Buffering': 'no'      
+        }
+    )
 
 
   ## Uso no PC Windons

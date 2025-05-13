@@ -117,8 +117,11 @@ def login():
             flash('RE não encontrado.', 'error')
     return render_template('login.html')
 
+from flask import (
+    Blueprint, render_template, request, session, redirect,
+    url_for, flash, Response, stream_with_context
+)
 
-## Usado Somente para VM
 @app.route('/analyze', methods=['GET', 'POST'])
 def analyze():
     if 're' not in session:
@@ -181,7 +184,11 @@ def analyze():
             'X-Accel-Buffering': 'no'      
         }
     )
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 95fcbc4 (vai)
   ## Uso no PC Windons
 # @app.route('/analyze', methods=['GET', 'POST'])
 # def analyze():

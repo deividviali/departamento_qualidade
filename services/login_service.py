@@ -165,8 +165,4 @@ def fechar_navegador(driver):
             driver.xvfb_proc.wait(timeout=5)
             print(f"[login_service] Xvfb no display {os.environ.get('DISPLAY')} finalizado")
         except Exception:
-<<<<<<< HEAD
             print("[login_service] Não foi possível finalizar o Xvfb")
-=======
-            print("[login_service] Não foi possível finalizar o Xvfb")
->>>>>>> 95fcbc4 (vai)

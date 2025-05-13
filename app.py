@@ -184,11 +184,7 @@ def analyze():
             'X-Accel-Buffering': 'no'      
         }
     )
-<<<<<<< HEAD
-
-=======
     
->>>>>>> 95fcbc4 (vai)
   ## Uso no PC Windons
 # @app.route('/analyze', methods=['GET', 'POST'])
 # def analyze():

@@ -5,6 +5,9 @@ import unicodedata
 
 combinacoes_avaliadas = set()
 
+def normalize(text):
+        return unicodedata.normalize('NFKD', text).encode('ASCII', 'ignore').decode('ASCII').lower().strip()
+
 def normalize_str(s: str) -> str:   
     s = unicodedata.normalize("NFD", s)
     s = "".join(ch for ch in s if unicodedata.category(ch) != "Mn")
@@ -471,8 +474,11 @@ def corrigir_f(driver, tarefa, dados, erros_coleta):
             erros_avaliacao.append(tratar_mensagem_erro(msg)) 
 
     if not erros_avaliacao:           
-        required_naturezas = ["lesão corporal culposa em sinistro de trânsito", "posse ou porte de drogas para uso pessoal", "sinistro de trânsito (com pessoa ferida ou morta)"] 
-        ## testar auteração
+        required_naturezas = [
+            "sinistro de trânsito (com pessoa ferida ou morta)",
+            "lesão corporal culposa em sinistro de trânsito",
+            "posse ou porte de drogas para uso pessoal"
+        ] 
         natureza_texto = dados.get("natureza", "")
         natureza_lista = [n.strip().lower() for n in natureza_texto.split(";") if n.strip()]        
         missing = [req for req in required_naturezas if req not in natureza_lista]
@@ -487,28 +493,56 @@ def corrigir_f(driver, tarefa, dados, erros_coleta):
                 "Comandante da guarnição não confere com o nome do aluno"
             ))
 
-    if not erros_avaliacao:           
-        required_envolvidos = ["fiel depositário"] 
-        envolvimento = dados.get("tipo_envolvimento", "").lower()
-        missing = [req for req in required_envolvidos if req not in envolvimento]
-        if missing:
-            msg = f"Nenhum dos envolvidos possui o tipo de envolvimento solicitado {', '.join(missing)}"
-            erros_avaliacao.append(tratar_mensagem_erro(msg))   
-                
     if not erros_avaliacao:        
         relato_norm = normalize_str(dados.get("relato_policial", ""))
         relato_norm = " ".join(relato_norm.split())        
-        frase_norm = normalize_str(
-            "comunica-se à autoridade judiciária competente"
-        )        
+        frase_norm = normalize_str("comunica-se à autoridade judiciária competente")    
         if frase_norm not in relato_norm:
             erros_avaliacao.append(tratar_mensagem_erro(
                 "Relato policial não contém o critério padrão de confecção por IA"
-            ))
-        
+            ))  
+
+    if not erros_avaliacao:           
+        required_envolvidos = ["situação apreendida"] 
+        drogas = dados.get("tipo_drogas", "").lower()
+        missing = [req for req in required_envolvidos if req not in drogas]
+        if missing:
+            msg = f"Nenhum dos envolvidos possui o tipo de drogas solicitado: {', '.join(missing)}"
+            erros_avaliacao.append(tratar_mensagem_erro(msg))    
+    
+    if not erros_avaliacao:
+        tipos_veiculos = ["apreendido por infracao penal", "deposito fiel"]
+        tipo_ve_raw = dados.get("tipo_veiculos", "")
+        if isinstance(tipo_ve_raw, list):
+            tipo_ve_texto = "; ".join(str(item) for item in tipo_ve_raw).lower()
+        else:
+            tipo_ve_texto = str(tipo_ve_raw).lower()
+        tipo_ve_lista = [normalize(item) for item in tipo_ve_texto.replace(',', ';').split(';') if item.strip()]
+        missing = [req for req in tipos_veiculos if req not in tipo_ve_lista]
+        if missing:
+            msg = f"Veículos não possuem a condição de apreendido por infração penal e depósito fiel: {', '.join(missing)}"
+            erros_avaliacao.append(tratar_mensagem_erro(msg))   
+   
+    if not erros_avaliacao:
+        tipos_ev_raw = dados.get("tipo_envolvimento", [])
+        tipos_ev_lista = []
+
+        if isinstance(tipos_ev_raw, str):
+            tipos_ev_lista = [normalize(tipos_ev_raw)]
+        elif isinstance(tipos_ev_raw, list):
+            for item in tipos_ev_raw:
+                if isinstance(item, dict):
+                    envolvimento = item.get("envolvimento", "")
+                    tipos_ev_lista.append(normalize(envolvimento))
+                elif isinstance(item, str):
+                    tipos_ev_lista.append(normalize(item))
+
+        if "abordado" not in tipos_ev_lista:
+            erros_avaliacao.append(tratar_mensagem_erro("Tipo de envolvimento 'abordado' não encontrado."))  
+    
     if not erros_avaliacao:
         nota = 1
-    
+
     return Resultado(
         atividade='F',
         protocolo=protocolo,
@@ -521,6 +555,7 @@ def corrigir_f(driver, tarefa, dados, erros_coleta):
         erros_avaliacao=erros_avaliacao
     )
 
+    
 def corrigir_ppe(driver, tarefa, dados, erros_coleta):
     erros_avaliacao = []
     nota = 0

@@ -23,3 +23,5 @@ logs/
 
 # não versionar imagens de debug
 erro_interacao_botao.png
+
+dbs/

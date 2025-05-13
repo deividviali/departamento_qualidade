@@ -694,7 +694,104 @@ def coletar_e(driver, protocolo, erros_coleta):
     return coletar_a(driver, protocolo, erros_coleta)
 
 def coletar_f(driver, protocolo, erros_coleta):
-    return coletar_a(driver, protocolo, erros_coleta)
+    WebDriverWait(driver, 40).until(
+        EC.element_to_be_clickable((By.LINK_TEXT, "Consultas"))
+    ).click()
+    WebDriverWait(driver, 40).until(
+        EC.element_to_be_clickable((By.LINK_TEXT, "Ocorrências"))
+    ).click()
+    time.sleep(10)
+    campo_prot = "/html/body/form/div[1]/div/div[2]/div[1]/div[3]/div[2]/div[1]/div/input"
+    if not interagir_com_iframe(driver, 0, campo_prot, protocolo):
+        erros_coleta.append("Protocolo não encontrado no iframe de busca")
+        return {}
+    interagir_com_iframe_botao(driver, 0, "/html/body/form/div[2]/div/button[1]")
+    time.sleep(1)
+    interagir_com_iframe_botao(driver, 0, "/html/body/div[5]/div[2]/div[3]/button")
+    time.sleep(2)
+    
+    try:
+        interagir_com_iframe_botao(driver, 0, "//table/tbody/tr/td[10]/a[1]")
+    except:
+        interagir_com_iframe_botao(driver, 0, "//table/tbody/tr[1]/td[10]/a[1]")
+    time.sleep(1)
+    original = driver.current_window_handle
+    driver.switch_to.window(driver.window_handles[-1])
+    time.sleep(1)
+    
+    xpaths = {
+        "nome_geracao": "/html/body/div[9]/div[2]",
+        "info_protocolo": "/html/body/div[1]/label",
+        "codigo_fechamento": "/html/body/div[24]/div[2]",
+        "origem_abertura_oc": "/html/body/div[15]/div[2]",
+        "data_oc": "/html/body/div[1]/label",
+        "relato_policial": "/html/body/div[26]/div[2]",
+        "complemento_oc": "/html/body/div[11]/table/tbody/tr/td"
+
+    }
+    dados = extrair_campos(driver, xpaths, erros_coleta)   
+
+    try:
+        dados["natureza"] = extrair_naturezas(driver)
+    except Exception as e:
+        erros_coleta.append(tratar_mensagem_erro(f"Erro extraindo Natureza: {e}"))
+        dados["natureza"] = ""   
+
+    try:
+        dados["comandante_guarnicao"] = extrair_comandante(driver)
+    except Exception as e:
+        erros_coleta.append(tratar_mensagem_erro(str(e)))
+        dados["comandante_guarnicao"] = ""                   
+    if dados["comandante_guarnicao"]:
+        lista_comandantes = [cmd.strip() for cmd in dados["comandante_guarnicao"].split(";") if cmd.strip()]
+        lista_comandantes_unicas = list(dict.fromkeys(lista_comandantes))
+        dados["comandante_guarnicao"] = "; ".join(lista_comandantes_unicas)
+
+    try:            
+        veiculos_str, tipo_veiculos = extrair_veiculos_e_detalhes(driver, erros_coleta)            
+        dados["veiculos"] = veiculos_str
+        dados["tipo_veiculos"] = "; ".join(tipo_veiculos)
+    except Exception as e:
+        msg = f"Erro ao extrair veículos: {e}"
+        print(tratar_mensagem_erro(msg))
+        erros_coleta.append(tratar_mensagem_erro(msg))
+        dados["veiculos"] = ""
+        dados["tipo_veiculos"] = ""
+            
+    try:            
+        drogas_str, tipo_drogas = extrair_drogas_e_detalhes(driver, erros_coleta)
+        dados["drogas"] = drogas_str
+        dados["tipo_drogas"] = "; ".join(tipo_drogas)
+    except Exception as e:
+        msg = f"Erro ao extrair Drogas: {e}"
+        print(tratar_mensagem_erro(msg))
+        erros_coleta.append(tratar_mensagem_erro(msg))
+        dados["drogas"] = ""
+        dados["tipo_drogas"] = ""
+
+    try:
+        env_str, env_tipos = extrair_envolvidos_e_tipos(driver, erros_coleta)
+        dados["envolvido"] = env_str
+        dados["tipo_envolvimento"] = env_tipos
+    except Exception as e:
+        erros_coleta.append(tratar_mensagem_erro(str(e)))
+        dados["envolvido"] = dados["tipo_envolvimento"] = ""
+
+    if "nome_geracao" in dados:
+                nome_geracao = dados["nome_geracao"]
+                nome_match = re.search(r"^(.*?)\s*\[", nome_geracao)
+                if nome_match:
+                    dados["nome_geracao"] = nome_match.group(1).strip()
+    if "protocolo" in dados:
+        info_protocolo = dados["protocolo"].replace("Ocorrência Protocolo:", "").strip()
+        prot_match = re.search(r"^(.*?)\s*\[", info_protocolo)
+        if prot_match:
+            dados["protocolo"] = prot_match.group(1).strip()          
+    
+    driver.close()
+    driver.switch_to.window(original)
+    return dados
+
 
 def coletar_ppe(driver, protocolo, erros_coleta):
     WebDriverWait(driver, 40).until(

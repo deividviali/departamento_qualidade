@@ -15,7 +15,7 @@ dist/
 *.db
 *.sqlite3
 logs/
-
+dbs/
 # IDEs / OS
 .vscode/
 .idea/

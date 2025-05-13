@@ -688,5 +688,8 @@ def coletar_f(driver, protocolo, erros_coleta):
 
 def coletar_ppe(driver, protocolo, erros_coleta):
     return coletar_a(driver, protocolo, erros_coleta)
+
+def coletar_cfs25(driver, protocolo, erros_coleta):
+    return coletar_a(driver, protocolo, erros_coleta)
     
 

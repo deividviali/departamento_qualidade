@@ -16,6 +16,7 @@ COLLECTORS = {
     'E': coletar_e,
     'F': coletar_f,
     'PPE': coletar_ppe,
+    'CFS25': coletar_cfs25,
     
 }
 CORRECTORS = {
@@ -26,6 +27,7 @@ CORRECTORS = {
     'E': corrigir_e,
     'F': corrigir_f,
     'PPE': corrigir_ppe,
+    'CFS25': corrigir_cfs25,
     
 }
 

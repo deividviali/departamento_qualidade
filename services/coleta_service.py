@@ -550,10 +550,10 @@ def extrair_comandante(driver) -> str:
     return "; ".join(resultados)
 
 def coletar_a(driver, protocolo, erros_coleta):    
-        WebDriverWait(driver, 15).until(
+        WebDriverWait(driver, 40).until(
             EC.element_to_be_clickable((By.LINK_TEXT, "Consultas"))
         ).click()
-        WebDriverWait(driver, 30).until(
+        WebDriverWait(driver, 40).until(
             EC.element_to_be_clickable((By.LINK_TEXT, "Ocorrências"))
         ).click()
         time.sleep(10)

@@ -65,12 +65,20 @@ def corrigir_a(driver, tarefa, dados, erros_coleta):
         if nome_tabela.strip().lower() == dados["nome_geracao"].strip().lower():
             codigo = dados.get("codigo_fechamento", "").strip()            
             if codigo == "Averiguação Policial sem Alteração":                
+                
+                
                 tipos = dados.get("tipo_envolvimento", [])
                 if isinstance(tipos, str):
-                    tipos = [tipos]
-                tipos_norm = [t.strip().lower() for t in tipos if t.strip()]
-
+                    tipos = [tipos]                
+                tipos_norm = []
+                for item in tipos:
+                    if isinstance(item, dict):
+                        envolvimento = item.get("envolvimento", "").strip().lower()
+                        tipos_norm.append(envolvimento)
+                    elif isinstance(item, str):
+                        tipos_norm.append(item.strip().lower())               
                 if "abordado" in tipos_norm:
+                    
                     origem = dados.get("origem_abertura_oc", "").strip().lower()
                     if origem != "mobile":
                         nota = 1

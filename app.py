@@ -26,7 +26,7 @@ ATIVIDADES_OPCOES = {
     '2': ('B', 'Atividade B'),
     # '3': ('C', 'Atividade C'),
     # '4': ('D', 'Atividade D'),
-    # '5': ('E', 'Atividade E'),
+    '5': ('E', 'Atividade E'),
     '6': ('F', 'Atividade F'),
     #'7': ('PPE', 'Prova Prática de Execução'),  
      '8': ('CFS25', 'Atividade Prática CFS2025'),  

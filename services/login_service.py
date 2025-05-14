@@ -29,7 +29,7 @@
 #     except (NoSuchElementException, Exception) as e:
 #         print(f"[login_service] Aviso: falha ao submeter login: {e}")
 #         return False
-#     time.sleep(5)
+#     time.sleep(8)
     
 #     try:
 #         WebDriverWait(driver, 110).until(EC.element_to_be_clickable((By.ID, "Selecionar"))).click()

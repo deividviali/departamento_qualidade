@@ -2,6 +2,7 @@ from models.resultado import Resultado
 from services.coleta_service import *
 from utils.helpers import tratar_mensagem_erro
 import unicodedata
+import re
 
 combinacoes_avaliadas = set()
 
@@ -299,7 +300,6 @@ def corrigir_d(driver, tarefa, dados, erros_coleta):
     
     if not erros_avaliacao:           
         required_naturezas = ["posse irregular de arma de fogo de uso permitido", "lesão corporal leve - dolosa"] 
-        ##Testar a auteração
         natureza_texto = dados.get("natureza", "")
         natureza_lista = [n.strip().lower() for n in natureza_texto.split(";") if n.strip()]        
         missing = [req for req in required_naturezas if req not in natureza_lista]
@@ -309,7 +309,7 @@ def corrigir_d(driver, tarefa, dados, erros_coleta):
     
     if not erros_avaliacao:        
         comandante_extraido = dados.get("comandante_guarnicao", "")
-        if normalize_str(comandante_extraido) != nome_tabela:
+        if normalize_str(comandante_extraido) != normalize(nome_tabela):
             erros_avaliacao.append(tratar_mensagem_erro(
                 "Comandante da guarnição não confere com o nome do aluno"
             ))
@@ -402,8 +402,11 @@ def corrigir_e(driver, tarefa, dados, erros_coleta):
             erros_avaliacao.append(tratar_mensagem_erro(msg)) 
 
     if not erros_avaliacao:           
-        required_naturezas = ["perturbação do trabalho ou sossego alheios", "desacato"] 
-        #Testar a auteração
+        required_naturezas = [
+                        "perturbação do trabalho ou sossego alheios", 
+                        "desacato",
+                        "dano"
+        ] 
         natureza_texto = dados.get("natureza", "")
         natureza_lista = [n.strip().lower() for n in natureza_texto.split(";") if n.strip()]        
         missing = [req for req in required_naturezas if req not in natureza_lista]
@@ -413,38 +416,47 @@ def corrigir_e(driver, tarefa, dados, erros_coleta):
     
     if not erros_avaliacao:        
         comandante_extraido = dados.get("comandante_guarnicao", "")
-        if normalize_str(comandante_extraido) != nome_tabela:
+        if normalize_str(comandante_extraido) != normalize(nome_tabela):
             erros_avaliacao.append(tratar_mensagem_erro(
                 "Comandante da guarnição não confere com o nome do aluno"
             ))
+   
+    if not erros_avaliacao:
+        tipos_ev_raw = dados.get("tipo_envolvimento", [])
+        tipos_ev_lista = []
 
-    if not erros_avaliacao:           
-        required_envolvidos = ["fiel depositário"] 
-        envolvimento = dados.get("tipo_envolvimento", "").lower()
-        missing = [req for req in required_envolvidos if req not in envolvimento]
-        if missing:
-            msg = f"Nenhum dos envolvidos possui o tipo de envolvimento solicitado {', '.join(missing)}"
-            erros_avaliacao.append(tratar_mensagem_erro(msg))   
+        if isinstance(tipos_ev_raw, str):
+            tipos_ev_lista = [normalize(tipos_ev_raw)]
+        elif isinstance(tipos_ev_raw, list):
+            for item in tipos_ev_raw:
+                if isinstance(item, dict):
+                    envolvimento = item.get("envolvimento", "")
+                    tipos_ev_lista.append(normalize(envolvimento))
+                elif isinstance(item, str):
+                    tipos_ev_lista.append(normalize(item))
 
-    if not erros_avaliacao:       
-        obj_list = [
-            normalize_str(p)
-            for p in re.split(r"[;,]", dados.get("tipo_situacao", ""))
-            if p.strip()
+        if "fiel depositario" not in tipos_ev_lista:
+            erros_avaliacao.append(tratar_mensagem_erro("Tipo de envolvimento 'fiel depositario' não encontrado."))  
+
+    if not erros_avaliacao and isinstance(dados.get("tipo_situacao"), list):
+        descricoes = [
+            normalize(obj.get('dados', ''))
+            for obj in dados['tipo_situacao']
         ]        
-        if "apreendido por infracao penal" not in obj_list:
+
+        if not any('apreendido por infracao penal' in desc for desc in descricoes):
             erros_avaliacao.append(tratar_mensagem_erro(
-                "Ocorrência não possui 'Apreendido por infração penal' cadastrada"
+                "Cadastro de objeto não possui o tipo 'Apreendido por infração penal'"
             ))
-        if "deposito fiel" not in obj_list:
+
+        if not any('deposito fiel' in desc for desc in descricoes):
             erros_avaliacao.append(tratar_mensagem_erro(
-                "Ocorrência não possui 'Depósito fiel' cadastrada"
-            ))      
-
-
+                "Cadastro de objeto não possui o tipo 'Depósito fiel'"
+            ))
+    
     if not erros_avaliacao:
         nota = 1
-    
+
     return Resultado(
         atividade='E',
         protocolo=protocolo,
@@ -455,7 +467,8 @@ def corrigir_e(driver, tarefa, dados, erros_coleta):
         nota=nota,
         erros_coleta=erros_coleta,
         erros_avaliacao=erros_avaliacao
-    )
+    )  
+    
 
 def corrigir_f(driver, tarefa, dados, erros_coleta):
     erros_avaliacao = []
@@ -488,7 +501,7 @@ def corrigir_f(driver, tarefa, dados, erros_coleta):
     
     if not erros_avaliacao:        
         comandante_extraido = dados.get("comandante_guarnicao", "")
-        if normalize_str(comandante_extraido) != nome_tabela:
+        if normalize_str(comandante_extraido) != normalize(nome_tabela):
             erros_avaliacao.append(tratar_mensagem_erro(
                 "Comandante da guarnição não confere com o nome do aluno"
             ))
@@ -583,7 +596,7 @@ def corrigir_ppe(driver, tarefa, dados, erros_coleta):
     
     if not erros_avaliacao:        
         comandante_extraido = dados.get("comandante_guarnicao", "")
-        if normalize_str(comandante_extraido) != nome_tabela:
+        if normalize_str(comandante_extraido) != normalize(nome_tabela):
             erros_avaliacao.append(tratar_mensagem_erro(
                 "Comandante da guarnição não confere com o nome do aluno"
             ))
@@ -607,63 +620,28 @@ def corrigir_ppe(driver, tarefa, dados, erros_coleta):
             msg = f"Nenhum dos envolvidos possui o tipo de drogas solicitado: {', '.join(missing)}"
             erros_avaliacao.append(tratar_mensagem_erro(msg))     
 
-    if not erros_avaliacao and isinstance(dados.get("tipo_situacao"), list):
-        encontrou_caixa_de_som = False
-        encontrou_mesa_controladora = False
-        encontrou_faca = False
-        encontrou_portao = False
+    if not erros_avaliacao and isinstance(dados.get("tipo_situacao"), list):        
+        descricoes = [normalize(obj['dados']) for obj in dados['tipo_situacao']]
 
-        for item in dados["tipo_situacao"]:
-            objeto = normalize_str(item.get("objeto", ""))
-            dados_str = normalize_str(item.get("dados", ""))
-
-            if "caixa de som" in objeto:
-                encontrou_caixa_de_som = True
-                if "deposito fiel" not in dados_str and "apreendido por infracao penal" not in dados_str:
-                    erros_avaliacao.append(tratar_mensagem_erro(
-                        "Caixa de som cadastrada mas sem 'Depósito fiel' ou 'Apreendido por infração penal'"
-                    ))
-
-            if "mesa controladora" in objeto:
-                encontrou_mesa_controladora = True
-                if "apreendido por infracao penal" not in dados_str:
-                    erros_avaliacao.append(tratar_mensagem_erro(
-                        "Mesa controladora cadastrada mas sem a condição 'apreendido por infração penal'"
-                    ))
-
-            if "faca" in objeto:
-                encontrou_faca = True
-                if "apreendido por infracao penal" not in dados_str:
-                    erros_avaliacao.append(tratar_mensagem_erro(
-                        "Faca cadastrada mas sem a condição 'apreendido por infração penal'"
-                    ))
-
-            if "portao" in objeto:
-                encontrou_portao = True
-                if "danificado" not in dados_str:
-                    erros_avaliacao.append(tratar_mensagem_erro(
-                        "Portão cadastrado mas sem a condição 'danificado'"
-                    ))        
-        if not encontrou_caixa_de_som:
+        if not any('caixa' in desc and 'som' in desc for desc in descricoes):
             erros_avaliacao.append(tratar_mensagem_erro(
                 "Ocorrência não possui Caixa de Som cadastrada"
             ))
 
-        if not encontrou_mesa_controladora:
+        if not any(('mesa' in desc or 'controladora' in desc) and 'som' in desc for desc in descricoes):
             erros_avaliacao.append(tratar_mensagem_erro(
                 "Ocorrência não possui Mesa controladora cadastrada"
             ))
 
-        if not encontrou_faca:
+        if not any('faca' in desc for desc in descricoes):
             erros_avaliacao.append(tratar_mensagem_erro(
                 "Ocorrência não possui Faca cadastrada"
             ))
 
-        if not encontrou_portao:
+        if not any('portao' in desc for desc in descricoes):
             erros_avaliacao.append(tratar_mensagem_erro(
                 "Ocorrência não possui Portão cadastrado"
-            ))   
-                
+            ))                
         
     if not erros_avaliacao and isinstance(dados.get("tipo_envolvimento"), list):
         tipo_env = dados.get("tipo_envolvimento", [])        
@@ -754,12 +732,13 @@ def corrigir_cfs25(driver, tarefa, dados, erros_coleta):
             msg = f"Uma ou mais das naturezas obrigatórias não coletadas: {', '.join(missing)}"
             erros_avaliacao.append(tratar_mensagem_erro(msg))        
     
-    if not erros_avaliacao:        
+    if not erros_avaliacao:               
         comandante_extraido = dados.get("comandante_guarnicao", "")
-        if normalize_str(comandante_extraido) != nome_tabela:
+        if normalize_str(comandante_extraido) != normalize(nome_tabela):
             erros_avaliacao.append(tratar_mensagem_erro(
                 "Comandante da guarnição não confere com o nome do aluno"
             ))
+            
 
     if not erros_avaliacao:        
         relato_norm = normalize_str(dados.get("relato_policial", ""))
@@ -778,65 +757,30 @@ def corrigir_cfs25(driver, tarefa, dados, erros_coleta):
         missing = [req for req in required_envolvidos if req not in drogas]
         if missing:
             msg = f"Nenhum dos envolvidos possui o tipo de drogas solicitado: {', '.join(missing)}"
-            erros_avaliacao.append(tratar_mensagem_erro(msg))     
+            erros_avaliacao.append(tratar_mensagem_erro(msg)) 
+                
+    if not erros_avaliacao and isinstance(dados.get("tipo_situacao"), list):        
+        descricoes = [normalize(obj['dados']) for obj in dados['tipo_situacao']]
 
-    if not erros_avaliacao and isinstance(dados.get("tipo_situacao"), list):
-        encontrou_caixa_de_som = False
-        encontrou_mesa_controladora = False
-        encontrou_faca = False
-        encontrou_portao = False
-
-        for item in dados["tipo_situacao"]:
-            objeto = normalize_str(item.get("objeto", ""))
-            dados_str = normalize_str(item.get("dados", ""))
-
-            if "caixa de som" in objeto:
-                encontrou_caixa_de_som = True
-                if "deposito fiel" not in dados_str and "apreendido por infracao penal" not in dados_str:
-                    erros_avaliacao.append(tratar_mensagem_erro(
-                        "Caixa de som cadastrada mas sem 'Depósito fiel' ou 'Apreendido por infração penal'"
-                    ))
-
-            if "mesa controladora" in objeto:
-                encontrou_mesa_controladora = True
-                if "apreendido por infracao penal" not in dados_str:
-                    erros_avaliacao.append(tratar_mensagem_erro(
-                        "Mesa controladora cadastrada mas sem a condição 'apreendido por infração penal'"
-                    ))
-
-            if "faca" in objeto:
-                encontrou_faca = True
-                if "apreendido por infracao penal" not in dados_str:
-                    erros_avaliacao.append(tratar_mensagem_erro(
-                        "Faca cadastrada mas sem a condição 'apreendido por infração penal'"
-                    ))
-
-            if "portao" in objeto:
-                encontrou_portao = True
-                if "danificado" not in dados_str:
-                    erros_avaliacao.append(tratar_mensagem_erro(
-                        "Portão cadastrado mas sem a condição 'danificado'"
-                    ))        
-        if not encontrou_caixa_de_som:
+        if not any('caixa' in desc and 'som' in desc for desc in descricoes):
             erros_avaliacao.append(tratar_mensagem_erro(
                 "Ocorrência não possui Caixa de Som cadastrada"
             ))
 
-        if not encontrou_mesa_controladora:
+        if not any(('mesa' in desc or 'controladora' in desc) and 'som' in desc for desc in descricoes):
             erros_avaliacao.append(tratar_mensagem_erro(
                 "Ocorrência não possui Mesa controladora cadastrada"
             ))
 
-        if not encontrou_faca:
+        if not any('faca' in desc for desc in descricoes):
             erros_avaliacao.append(tratar_mensagem_erro(
                 "Ocorrência não possui Faca cadastrada"
             ))
 
-        if not encontrou_portao:
+        if not any('portao' in desc for desc in descricoes):
             erros_avaliacao.append(tratar_mensagem_erro(
                 "Ocorrência não possui Portão cadastrado"
-            ))   
-                
+            ))
         
     if not erros_avaliacao and isinstance(dados.get("tipo_envolvimento"), list):
         tipo_env = dados.get("tipo_envolvimento", [])        

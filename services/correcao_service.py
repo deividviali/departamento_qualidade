@@ -628,9 +628,13 @@ def corrigir_ppe(driver, tarefa, dados, erros_coleta):
                 "Ocorrência não possui Caixa de Som cadastrada"
             ))
 
-        if not any(('mesa' in desc or 'controladora' in desc) and 'som' in desc for desc in descricoes):
+        if not any(
+            ('mesa' in desc.lower() and 'som' in desc.lower()) or
+            ('mesa' in desc.lower() and 'controladora' in desc.lower())
+            for desc in descricoes
+        ):
             erros_avaliacao.append(tratar_mensagem_erro(
-                "Ocorrência não possui Mesa controladora cadastrada"
+                "Ocorrência não possui Mesa de som ou Mesa controladora cadastrada"
             ))
 
         if not any('faca' in desc for desc in descricoes):
@@ -767,9 +771,13 @@ def corrigir_cfs25(driver, tarefa, dados, erros_coleta):
                 "Ocorrência não possui Caixa de Som cadastrada"
             ))
 
-        if not any(('mesa' in desc or 'controladora' in desc) and 'som' in desc for desc in descricoes):
+        if not any(
+            ('mesa' in desc.lower() and 'som' in desc.lower()) or
+            ('mesa' in desc.lower() and 'controladora' in desc.lower())
+            for desc in descricoes
+        ):
             erros_avaliacao.append(tratar_mensagem_erro(
-                "Ocorrência não possui Mesa controladora cadastrada"
+                "Ocorrência não possui Mesa de som ou Mesa controladora cadastrada"
             ))
 
         if not any('faca' in desc for desc in descricoes):

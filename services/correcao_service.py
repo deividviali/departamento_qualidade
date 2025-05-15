@@ -620,33 +620,64 @@ def corrigir_ppe(driver, tarefa, dados, erros_coleta):
             msg = f"Nenhum dos envolvidos possui o tipo de drogas solicitado: {', '.join(missing)}"
             erros_avaliacao.append(tratar_mensagem_erro(msg))     
 
-    if not erros_avaliacao and isinstance(dados.get("tipo_situacao"), list):        
-        descricoes = [normalize(obj['dados']) for obj in dados['tipo_situacao']]
+    if not erros_avaliacao and isinstance(dados.get("tipo_situacao"), list):
+        encontrou_caixa_de_som = False
+        encontrou_mesa_controladora = False
+        encontrou_faca = False
+        encontrou_portao = False
 
-        if not any('caixa' in desc and 'som' in desc for desc in descricoes):
+        for item in dados["tipo_situacao"]:
+            dados_str = normalize(item.get("dados", ""))
+            print(f"[DEBUG] Dados normalizados: {dados_str}")
+           
+            if "caixa" in dados_str and "som" in dados_str:
+                encontrou_caixa_de_som = True
+                if "deposito fiel" not in dados_str and "apreendido por infracao penal" not in dados_str:
+                    erros_avaliacao.append(tratar_mensagem_erro(
+                        "Caixa de som cadastrada mas sem 'Depósito fiel' ou 'Apreendido por infração penal'"
+                    ))
+           
+            if ("mesa" in dados_str and "som" in dados_str) or ("mesa" in dados_str and "controladora" in dados_str):
+                encontrou_mesa_controladora = True
+                if "apreendido por infracao penal" not in dados_str:
+                    erros_avaliacao.append(tratar_mensagem_erro(
+                        "Mesa de som/controladora cadastrada mas sem a condição 'apreendido por infração penal'"
+                    ))
+            
+            if "faca" in dados_str:
+                encontrou_faca = True
+                if "apreendido por infracao penal" not in dados_str:
+                    erros_avaliacao.append(tratar_mensagem_erro(
+                        "Faca cadastrada mas sem a condição 'apreendido por infração penal'"
+                    ))
+            
+            if "portao" in dados_str:
+                encontrou_portao = True
+                if "danificado" not in dados_str:
+                    erros_avaliacao.append(tratar_mensagem_erro(
+                        "Portão cadastrado mas sem a condição 'danificado'"
+                    ))
+       
+        if not encontrou_caixa_de_som:
             erros_avaliacao.append(tratar_mensagem_erro(
                 "Ocorrência não possui Caixa de Som cadastrada"
             ))
 
-        if not any(
-            ('mesa' in desc.lower() and 'som' in desc.lower()) or
-            ('mesa' in desc.lower() and 'controladora' in desc.lower())
-            for desc in descricoes
-        ):
+        if not encontrou_mesa_controladora:
             erros_avaliacao.append(tratar_mensagem_erro(
-                "Ocorrência não possui Mesa de som ou Mesa controladora cadastrada"
+                "Ocorrência não possui Mesa de som ou controladora cadastrada"
             ))
 
-        if not any('faca' in desc for desc in descricoes):
+        if not encontrou_faca:
             erros_avaliacao.append(tratar_mensagem_erro(
                 "Ocorrência não possui Faca cadastrada"
             ))
 
-        if not any('portao' in desc for desc in descricoes):
+        if not encontrou_portao:
             erros_avaliacao.append(tratar_mensagem_erro(
                 "Ocorrência não possui Portão cadastrado"
-            ))                
-        
+            ))
+
     if not erros_avaliacao and isinstance(dados.get("tipo_envolvimento"), list):
         tipo_env = dados.get("tipo_envolvimento", [])        
 

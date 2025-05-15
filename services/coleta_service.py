@@ -932,27 +932,27 @@ def coletar_ppe(driver, protocolo, erros_coleta):
         lista_comandantes_unicas = list(dict.fromkeys(lista_comandantes))
         dados["comandante_guarnicao"] = "; ".join(lista_comandantes_unicas)
 
-    try:            
-        veiculos_str, tipo_veiculos = extrair_veiculos_e_detalhes(driver, erros_coleta)            
-        dados["veiculos"] = veiculos_str
-        dados["tipo_veiculos"] = "; ".join(tipo_veiculos)
-    except Exception as e:
-        msg = f"Erro ao extrair veículos: {e}"
-        print(tratar_mensagem_erro(msg))
-        erros_coleta.append(tratar_mensagem_erro(msg))
-        dados["veiculos"] = ""
-        dados["tipo_veiculos"] = ""
+    # try:            
+    #     veiculos_str, tipo_veiculos = extrair_veiculos_e_detalhes(driver, erros_coleta)            
+    #     dados["veiculos"] = veiculos_str
+    #     dados["tipo_veiculos"] = "; ".join(tipo_veiculos)
+    # except Exception as e:
+    #     msg = f"Erro ao extrair veículos: {e}"
+    #     print(tratar_mensagem_erro(msg))
+    #     erros_coleta.append(tratar_mensagem_erro(msg))
+    #     dados["veiculos"] = ""
+    #     dados["tipo_veiculos"] = ""
         
-    try:            
-        armas_str, tipo_armas = extrair_armas_e_detalhes(driver, erros_coleta)            
-        dados["armas"] = armas_str
-        dados["tipo_armas"] = "; ".join(tipo_armas)
-    except Exception as e:
-        msg = f"Erro ao extrair Armas: {e}"
-        print(tratar_mensagem_erro(msg))
-        erros_coleta.append(tratar_mensagem_erro(msg))
-        dados["armas"] = ""
-        dados["tipo_armas"] = ""
+    # try:            
+    #     armas_str, tipo_armas = extrair_armas_e_detalhes(driver, erros_coleta)            
+    #     dados["armas"] = armas_str
+    #     dados["tipo_armas"] = "; ".join(tipo_armas)
+    # except Exception as e:
+    #     msg = f"Erro ao extrair Armas: {e}"
+    #     print(tratar_mensagem_erro(msg))
+    #     erros_coleta.append(tratar_mensagem_erro(msg))
+    #     dados["armas"] = ""
+    #     dados["tipo_armas"] = ""
         
     try:            
         drogas_str, tipo_drogas = extrair_drogas_e_detalhes(driver, erros_coleta)

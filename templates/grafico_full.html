@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Gráfico em Tela Separada</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+  <style>
+    body {
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 30px;
+      font-family: Arial, sans-serif;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 22px;
+      color: #333;
+    }
+
+    .grafico-container {
+      background-color: #fff;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    canvas {
+      border-radius: 10px;
+      background-color: white;
+      padding: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Desempenho Geral por Atividade</h2>
+
+  <div class="grafico-container">
+    <canvas id="graficoTelaCheia" style="height: 400px;"></canvas>
+  </div>
+
+  <script>
+    fetch('/grafico_dados')
+      .then(res => res.json())
+      .then(dados => {
+        const labels = dados.map(d => d.atividade);
+        const certo = dados.map(d => d.Certo || 0);
+        const errado = dados.map(d => d.Errado || 0);
+
+        const data = {
+          labels,
+          datasets: [
+            {
+              label: "Certo",
+              data: certo,
+              backgroundColor: "#2196f3"
+            },
+            {
+              label: "Errado",
+              data: errado,
+              backgroundColor: "#f44336"
+            }
+          ]
+        };
+
+        const config = {
+          type: "bar",
+          data,
+          options: {
+            responsive: true,
+            layout: {
+              padding: {
+                top: 20,
+                bottom: 20,
+                left: 20,
+                right: 20
+              }
+            },
+            plugins: {
+              legend: { position: 'top' },
+              title: {
+                display: true,
+                text: "Desempenho por Atividade",
+                font: { size: 18 }
+              },
+              datalabels: {
+                anchor: 'end',
+                align: 'top',
+                color: '#000',
+                font: {
+                  size: 12,
+                  weight: 'bold'
+                },
+                formatter: value => value
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Quantidade de Ocorrências'
+                }
+              },
+              x: {
+                title: {
+                  display: true,
+                  text: 'Atividade'
+                }
+              }
+            }
+          },
+          plugins: [ChartDataLabels]
+        };
+
+        new Chart(document.getElementById("graficoTelaCheia"), config);
+      });
+  </script>
+
+</body>
+</html>

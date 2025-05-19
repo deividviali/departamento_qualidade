@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Relatórios do Instrutor</title>
+  <title>Painel do Instrutor</title>
   <style>
     body {
       margin: 0;
@@ -11,105 +11,335 @@
       font-family: Arial, sans-serif;
     }
 
-    .container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
+    .dashboard {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 20px;
+      padding: 20px;
+      box-sizing: border-box;
+      min-height: 90vh;
     }
 
-    h2 {
-      margin-bottom: 30px;
+    .quadrante {
+      background-color: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .quadrante h3 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 1.2em;
+      color: #333;
     }
 
     form {
-      background-color: #fff;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
       display: flex;
       flex-direction: column;
-      gap: 15px;
-      width: 300px;
+      gap: 10px;
     }
 
     label {
       font-weight: bold;
     }
 
-    select {
+    select, input, button {
       padding: 10px;
       border-radius: 5px;
       border: 1px solid #ccc;
     }
 
-    button[type="submit"] {
-      padding: 12px;
+    button {
       background-color: #1e88e5;
       color: white;
       border: none;
-      border-radius: 5px;
       font-weight: bold;
       cursor: pointer;
     }
-    button[type="submit"]:hover {
+
+    button:hover {
       background-color: #1565c0;
     }
 
-    
-    .logout-inline {
-      padding: 8px 12px;
-      background-color: #5a0e0d;
-      color: rgb(117, 67, 67);
-      border: none;
-      border-radius: 5px;
-      font-size: 0.9em;
-      cursor: pointer;
-      align-self: flex-start; 
-      margin-top: 5px;
+    .logout-bottom {
+      text-align: center;
+      margin: 30px 0;
     }
-    .logout-inline:hover {
-      background-color: #c62828;
+
+    .logout-bottom form {
+      display: inline-block;
     }
+
+    .logout-bottom button {
+      background-color: #4a15db;
+      color: #fff;
+      font-size: 1em;
+      padding: 10px 20px;
+    }
+
+    .logout-bottom button:hover {
+      background-color: #a71b1b;
+    }
+
+    #consulta {
+      background-color: #585353;
+      color: white;
+    }
+
+    #consulta label {
+      color: white;
+    }
+
+    #grafico-quadrante {
+      background-color: #f5f5f5;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .grafico-container {
+      flex-grow: 1;
+      overflow: auto;
+      margin-top: 10px;
+      background-color: white;
+      border-radius: 10px;
+      padding: 15px;
+    }
+
+    #graficoRespostas {
+      width: 100% !important;
+      height: auto !important;
+      max-height: 360px;
+    }
+
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Relatórios por Filtro</h2>
-    <form method="post" action="/gerar_relatorio">
-      <label for="pelotao">Selecionar Pelotão:</label>
-      <select name="pelotao" id="pelotao">
-        <option value="">--Todos--</option>
-        <option value="1">1º Pelotão</option>
-        <option value="2">2º Pelotão</option>
-        <option value="3">3º Pelotão</option>
-      </select>
 
-      <label for="atividade">Selecionar Atividade:</label>
-      <select name="atividade" id="atividade">
-        <option value="">--Todas--</option>
-        <option value="A">Atividade A</option>
-        <option value="B">Atividade B</option>
-        <option value="C">Atividade C</option>
-        <option value="D">Atividade D</option>
-        <option value="E">Atividade E</option>
-        <option value="F">Atividade F</option>
-        <option value="CFS25">Atividade CFS25</option>
-        <option value="PPE">Prova Prática de execução</option>
-      </select>
-     
-      <button type="submit">Gerar Excel</button>
-      
-      <button 
-        type="submit" 
-        formaction="/logout" 
-        formmethod="post" 
-        class="logout-inline"
-      >
-        Logout
-      </button>
+  <div class="dashboard">    
+    <div class="quadrante" id="consulta">
+      <h3>Consulta à Base de Dados</h3>
+      <form method="post" action="/consultar_relatorio">
+        <label for="matricula">Matrícula:</label>
+        <input type="number" id="matricula" name="matricula" placeholder="Digite a matrícula">
+
+        <label for="pelotao">Pelotão:</label>
+        <select name="pelotao" id="pelotao">
+          <option value="">--Todos--</option>
+          <option value="1">1º Pelotão</option>
+          <option value="2">2º Pelotão</option>
+          <option value="3">3º Pelotão</option>
+        </select>
+
+        <label for="atividade">Atividade:</label>
+        <select name="atividade" id="atividade">
+          <option value="">--Todas--</option>
+          <option value="A">Atividade A</option>
+          <option value="B">Atividade B</option>
+          <option value="C">Atividade C</option>
+          <option value="D">Atividade D</option>
+          <option value="E">Atividade E</option>
+          <option value="F">Atividade F</option>
+          <option value="CFS25">Atividade CFS25</option>
+          <option value="PPE">Prova Prática de Execução</option>
+        </select>
+
+        <button type="submit">Consultar</button>
+      </form>
+    </div>
+
+
+  
+    <div class="quadrante">
+      <h3>Últimos 10 Registros</h3>
+      <div id="ultimos-registros">
+        <p>Carregando registros...</p>
+      </div>
+    </div>
+    
+    
+ 
+    <div class="quadrante" id="grafico-quadrante">
+      <h3>Desempenho por Questão</h3>
+
+      <div class="grafico-filtros">
+        <input type="date" id="filtroInicio">
+        <input type="date" id="filtroFim">
+
+        <select id="filtroPelotao">
+          <option value="todos">Todos os Pelotões</option>
+          <option value="1º Pel">1º Pel</option>
+          <option value="2º Pel">2º Pel</option>
+          <option value="3º Pel">3º Pel</option>
+        </select>
+
+        <select id="filtroAtividade">
+          <option value="todas">Todas as Atividades</option>
+          <option value="A">Atividade A</option>
+          <option value="B">Atividade B</option>
+          <option value="C">Atividade C</option>
+          <option value="D">Atividade D</option>
+          <option value="E">Atividade E</option>
+          <option value="F">Atividade F</option>
+          <option value="CFS25">CFS25</option>
+          <option value="PPE">PPE</option>
+        </select>
+
+        <select id="filtroStatus">
+          <option value="todos">Todos</option>
+          <option value="certo">Certo</option>
+          <option value="errado">Errado</option>
+        </select>
+
+        <button onclick="carregarGrafico()">🔍</button>
+        <button onclick="window.open('/grafico_full', '_blank')">⛶ Tela Separada</button>
+      </div>
+
+      <div class="grafico-container">
+        <canvas id="graficoRespostas"></canvas>
+      </div>
+    </div>
+
+
+    
+    <div class="quadrante">
+      <h3>Gerenciamento de Atividades</h3>
+      <div id="gerenciar-atividades">
+        {% include 'partials/gerenciar_atividades.html' %}
+      </div>
+    </div>
+ 
+  <div class="logout-bottom">
+    <form method="post" action="/logout">
+      <button type="submit">Logout</button>
     </form>
   </div>
+
+  <form method="post" action="/logout_todos_alunos" style="text-align:center; margin-top: 20px;">
+    <button type="submit"
+            title="Alunos logados: {{ alunos_logados }}"
+            style="padding: 10px 20px; background-color: #c62828; color: white; font-weight: bold; border: none; border-radius: 5px; cursor: pointer;">
+      🔁 Deslogar Todos os Alunos
+    </button>
+  </form>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+  function carregarUltimosRegistros() {
+    fetch('/ultimos_registros')
+      .then(response => response.text())
+      .then(html => {
+        document.getElementById('ultimos-registros').innerHTML = html;
+      })
+      .catch(error => {
+        document.getElementById('ultimos-registros').innerHTML = '<p>Erro ao carregar dados.</p>';
+      });
+  }  
+  carregarUltimosRegistros();
+  setInterval(carregarUltimosRegistros, 60000);   
+  </script>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+  <script>
+  let chart;
+  function carregarGrafico() {
+    const inicio = document.getElementById("filtroInicio").value;
+    const fim = document.getElementById("filtroFim").value;
+    const pelotao = document.getElementById("filtroPelotao").value;
+    const atividade = document.getElementById("filtroAtividade").value;
+    const status = document.getElementById("filtroStatus").value;
+
+    const url = `/grafico_dados?inicio=${inicio}&fim=${fim}&pelotao=${pelotao}&atividade=${atividade}&status=${status}`;
+
+    fetch(url)
+      .then(res => res.json())
+      .then(dados => {
+        const labels = dados.map(d => d.atividade);
+        const certo = dados.map(d => d.Certo || 0);
+        const errado = dados.map(d => d.Errado || 0);
+
+        const data = {
+          labels,
+          datasets: [
+            {
+              label: "Certo",
+              data: certo,
+              backgroundColor: "#2196f3"
+            },
+            {
+              label: "Errado",
+              data: errado,
+              backgroundColor: "#f44336"
+            }
+          ]
+        };
+
+        const config = {
+          type: "bar",
+          data,
+          options: {
+            responsive: true,
+            layout: {
+              padding: {
+                top: 20,
+                bottom: 20,
+                left: 20,
+                right: 20
+              }
+            },
+            plugins: {
+              legend: { position: 'top' },
+              title: {
+                display: true,
+                text: "Desempenho por Atividade",
+                font: { size: 18 }
+              },
+              datalabels: {
+                anchor: 'end',
+                align: 'top',
+                color: '#000',
+                font: {
+                  size: 12,
+                  weight: 'bold'
+                },
+                formatter: value => value
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Quantidade de Ocorrências'
+                }
+              },
+              x: {
+                title: {
+                  display: true,
+                  text: 'Atividade'
+                }
+              }
+            }
+          },
+          plugins: [ChartDataLabels]
+        };
+
+        if (chart) chart.destroy();
+        chart = new Chart(document.getElementById("graficoRespostas"), config);
+      });
+  }
+
+  carregarGrafico();
+  </script>
 </body>
 </html>

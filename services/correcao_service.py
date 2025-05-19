@@ -17,8 +17,33 @@ def normalize_str(s: str) -> str:
 def normalize_simples(s: str) -> str:
     return unicodedata.normalize('NFKD', s).encode('ASCII', 'ignore').decode().strip().lower()
 
-def tem_envolvimento_para_tipo(lista, nome_alvo, envolvimento_alvo, tipo_alvo):
-    nome_alvo = normalize_simples(nome_alvo)
+# def tem_envolvimento_para_tipo(lista, nome_alvo, envolvimento_alvo, tipo_alvo):
+#     nome_alvo = normalize_simples(nome_alvo)
+#     envolvimento_alvo = normalize_simples(envolvimento_alvo)
+#     tipo_alvo = normalize_simples(tipo_alvo)
+
+#     for registro in lista:
+#         nome = normalize_simples(registro.get("nome", ""))
+#         envolvimento = normalize_simples(registro.get("envolvimento", ""))
+#         tipo = normalize_simples(registro.get("tipos", ""))
+
+#         if nome_alvo in nome and envolvimento == envolvimento_alvo and tipo_alvo in tipo:
+#             return True
+#     return False
+
+# def tem_envolvimento(dados, nome_alvo, envolvimento_alvo):
+#     nome_alvo = normalize_simples(nome_alvo)
+#     envolvimento_alvo = normalize_simples(envolvimento_alvo)
+
+#     for registro in dados:
+#         nome = normalize_simples(registro.get("nome", ""))
+#         envolvimento = normalize_simples(registro.get("envolvimento", ""))
+#         if nome_alvo in nome and envolvimento == envolvimento_alvo:
+#             return True
+#     return False
+
+def tem_envolvimento_para_tipo(lista, nomes_alvo, envolvimento_alvo, tipo_alvo):
+    nomes_alvo = [normalize_simples(n) for n in (nomes_alvo if isinstance(nomes_alvo, list) else [nomes_alvo])]
     envolvimento_alvo = normalize_simples(envolvimento_alvo)
     tipo_alvo = normalize_simples(tipo_alvo)
 
@@ -27,18 +52,19 @@ def tem_envolvimento_para_tipo(lista, nome_alvo, envolvimento_alvo, tipo_alvo):
         envolvimento = normalize_simples(registro.get("envolvimento", ""))
         tipo = normalize_simples(registro.get("tipos", ""))
 
-        if nome_alvo in nome and envolvimento == envolvimento_alvo and tipo_alvo in tipo:
+        if any(nome_alvo in nome for nome_alvo in nomes_alvo) and envolvimento == envolvimento_alvo and tipo_alvo in tipo:
             return True
     return False
 
-def tem_envolvimento(dados, nome_alvo, envolvimento_alvo):
-    nome_alvo = normalize_simples(nome_alvo)
+
+def tem_envolvimento(lista, nomes_alvo, envolvimento_alvo):
+    nomes_alvo = [normalize_simples(n) for n in (nomes_alvo if isinstance(nomes_alvo, list) else [nomes_alvo])]
     envolvimento_alvo = normalize_simples(envolvimento_alvo)
 
-    for registro in dados:
+    for registro in lista:
         nome = normalize_simples(registro.get("nome", ""))
         envolvimento = normalize_simples(registro.get("envolvimento", ""))
-        if nome_alvo in nome and envolvimento == envolvimento_alvo:
+        if any(nome_alvo in nome for nome_alvo in nomes_alvo) and envolvimento == envolvimento_alvo:
             return True
     return False
 
@@ -568,7 +594,6 @@ def corrigir_f(driver, tarefa, dados, erros_coleta):
         erros_avaliacao=erros_avaliacao
     )
 
-    
 def corrigir_ppe(driver, tarefa, dados, erros_coleta):
     erros_avaliacao = []
     nota = 0
@@ -576,51 +601,50 @@ def corrigir_ppe(driver, tarefa, dados, erros_coleta):
     re_valor    = tarefa.re
     nome_tabela = tarefa.nome.strip().lower()
     protocolo   = tarefa.protocolo
-
-    if not erros_avaliacao:           
-        required_cf = ["termo circunstanciado"] 
-        cf = dados.get("codigo_fechamento", "").lower()
-        missing = [req for req in required_cf if req not in cf]
-        if missing:
-            msg = f"Código de fechamento divergente do solicitado - termo circunstanciado : {', '.join(missing)}"
-            erros_avaliacao.append(tratar_mensagem_erro(msg)) 
-
-    if not erros_avaliacao:           
-        required_naturezas = ["dano", "posse ou porte de drogas para uso pessoal", "perturbação do trabalho ou sossego alheios", "porte ou posse de arma branca ou simulacro", "lesão corporal leve - dolosa"] 
-        natureza_texto = dados.get("natureza", "")
-        natureza_lista = [n.strip().lower() for n in natureza_texto.split(";") if n.strip()]        
-        missing = [req for req in required_naturezas if req not in natureza_lista]
-        if missing:
-            msg = f"Uma ou mais das naturezas obrigatórias não coletadas: {', '.join(missing)}"
-            erros_avaliacao.append(tratar_mensagem_erro(msg))        
+   
+    required_cf = ["termo circunstanciado"] 
+    cf = dados.get("codigo_fechamento", "").lower()
+    missing = [req for req in required_cf if req not in cf]
+    if missing:
+        msg = f"Código de fechamento divergente do solicitado - termo circunstanciado: {', '.join(missing)}"
+        erros_avaliacao.append(tratar_mensagem_erro(msg)) 
     
-    if not erros_avaliacao:        
-        comandante_extraido = dados.get("comandante_guarnicao", "")
-        if normalize_str(comandante_extraido) != normalize(nome_tabela):
-            erros_avaliacao.append(tratar_mensagem_erro(
-                "Comandante da guarnição não confere com o nome do aluno"
-            ))
-
-    if not erros_avaliacao:        
-        relato_norm = normalize_str(dados.get("relato_policial", ""))
-        relato_norm = " ".join(relato_norm.split())        
-        frase_norm = normalize_str(
-            "comunica-se à autoridade judiciária competente"
-        )    
-        if frase_norm not in relato_norm:
-            erros_avaliacao.append(tratar_mensagem_erro(
-                "Relato policial não contém o critério padrão de confecção por IA"
-            ))  
-
-    if not erros_avaliacao:           
-        required_envolvidos = ["situação apreendida"] 
-        drogas = dados.get("tipo_drogas", "").lower()
-        missing = [req for req in required_envolvidos if req not in drogas]
-        if missing:
-            msg = f"Nenhum dos envolvidos possui o tipo de drogas solicitado: {', '.join(missing)}"
-            erros_avaliacao.append(tratar_mensagem_erro(msg))     
-
-    if not erros_avaliacao and isinstance(dados.get("tipo_situacao"), list):
+    required_naturezas = [
+        "dano",
+        "posse ou porte de drogas para uso pessoal",
+        "perturbação do trabalho ou sossego alheios",
+        "porte ou posse de arma branca ou simulacro",
+        "lesão corporal leve - dolosa"
+    ]
+    natureza_texto = dados.get("natureza", "")
+    natureza_lista = [n.strip().lower() for n in natureza_texto.split(";") if n.strip()]
+    missing = [req for req in required_naturezas if req not in natureza_lista]
+    if missing:
+        msg = f"Uma ou mais das naturezas obrigatórias não coletadas: {', '.join(missing)}"
+        erros_avaliacao.append(tratar_mensagem_erro(msg))
+    
+    comandante_extraido = dados.get("comandante_guarnicao", "")
+    if normalize_str(comandante_extraido) != normalize(nome_tabela):
+        erros_avaliacao.append(tratar_mensagem_erro(
+            "Comandante da guarnição não confere com o nome do aluno"
+        ))
+    
+    relato_norm = normalize_str(dados.get("relato_policial", ""))
+    relato_norm = " ".join(relato_norm.split())
+    frase_norm = normalize_str("comunica-se à autoridade judiciária competente")
+    if frase_norm not in relato_norm:
+        erros_avaliacao.append(tratar_mensagem_erro(
+            "Relato policial não contém o critério padrão de confecção por IA"
+        )) 
+    
+    required_envolvidos = ["situação apreendida"] 
+    drogas = dados.get("tipo_drogas", "").lower()
+    missing = [req for req in required_envolvidos if req not in drogas]
+    if missing:
+        msg = f"Nenhum dos envolvidos possui o tipo de drogas solicitado: {', '.join(missing)}"
+        erros_avaliacao.append(tratar_mensagem_erro(msg))  
+    
+    if isinstance(dados.get("tipo_situacao"), list):
         encontrou_caixa_de_som = False
         encontrou_mesa_controladora = False
         encontrou_faca = False
@@ -629,14 +653,14 @@ def corrigir_ppe(driver, tarefa, dados, erros_coleta):
         for item in dados["tipo_situacao"]:
             dados_str = normalize(item.get("dados", ""))
             print(f"[DEBUG] Dados normalizados: {dados_str}")
-           
+        
             if "caixa" in dados_str and "som" in dados_str:
                 encontrou_caixa_de_som = True
                 if "deposito fiel" not in dados_str and "apreendido por infracao penal" not in dados_str:
                     erros_avaliacao.append(tratar_mensagem_erro(
                         "Caixa de som cadastrada mas sem 'Depósito fiel' ou 'Apreendido por infração penal'"
                     ))
-           
+        
             if ("mesa" in dados_str and "som" in dados_str) or ("mesa" in dados_str and "controladora" in dados_str):
                 encontrou_mesa_controladora = True
                 if "apreendido por infracao penal" not in dados_str:
@@ -657,76 +681,53 @@ def corrigir_ppe(driver, tarefa, dados, erros_coleta):
                     erros_avaliacao.append(tratar_mensagem_erro(
                         "Portão cadastrado mas sem a condição 'danificado'"
                     ))
-       
+    
         if not encontrou_caixa_de_som:
             erros_avaliacao.append(tratar_mensagem_erro(
                 "Ocorrência não possui Caixa de Som cadastrada"
             ))
-
         if not encontrou_mesa_controladora:
             erros_avaliacao.append(tratar_mensagem_erro(
                 "Ocorrência não possui Mesa de som ou controladora cadastrada"
             ))
-
         if not encontrou_faca:
             erros_avaliacao.append(tratar_mensagem_erro(
                 "Ocorrência não possui Faca cadastrada"
             ))
-
         if not encontrou_portao:
             erros_avaliacao.append(tratar_mensagem_erro(
                 "Ocorrência não possui Portão cadastrado"
             ))
-
-    if not erros_avaliacao and isinstance(dados.get("tipo_envolvimento"), list):
+    
+    if isinstance(dados.get("tipo_envolvimento"), list):
         tipo_env = dados.get("tipo_envolvimento", [])        
-
-        if not tem_envolvimento_para_tipo(tipo_env, "paulo", "fiel depositario", "perturbacao do trabalho ou sossego alheios"):            
-            erros_avaliacao.append(tratar_mensagem_erro(
-                "Paulo Confusão da Silva deveria estar com envolvimento 'Fiel depositário' para o tipo 'Perturbação do trabalho ou sossego alheios'."
-            ))
-        if not tem_envolvimento_para_tipo(tipo_env, "paulo", "autor", "perturbacao do trabalho ou sossego alheios"):            
-            erros_avaliacao.append(tratar_mensagem_erro(
-                "Paulo Confusão da Silva deveria estar com envolvimento 'Autor' para o tipo 'Perturbação do trabalho ou sossego alheios'."
-            ))
-        if not tem_envolvimento_para_tipo(tipo_env, "paulo", "autor", "lesao corporal leve - dolosa"):           
-            erros_avaliacao.append(tratar_mensagem_erro(
-                "Paulo Confusão da Silva deveria estar com envolvimento 'Autor' para o tipo 'Lesão corporal leve - Dolosa'."
-            ))
-        if not tem_envolvimento(tipo_env, "paulo", "abordado"):            
-            erros_avaliacao.append(tratar_mensagem_erro(
-                "Paulo Confusão da Silva deveria estar com envolvimento 'Abordado'."
-            ))
-        if not tem_envolvimento(tipo_env, "edilson", "abordado"):            
-            erros_avaliacao.append(tratar_mensagem_erro(
-                "Edilson Faca na Cinta deveria estar com envolvimento 'Abordado'."
-            ))
-        if not tem_envolvimento_para_tipo(tipo_env, "edilson", "autor", "porte ou posse de arma branca ou simulacro"):            
-            erros_avaliacao.append(tratar_mensagem_erro(
-                "Edilson Faca na Cinta deveria estar com envolvimento 'Autor' para o tipo 'Porte ou posse de arma branca ou simulacro'."
-            ))
-        if not tem_envolvimento_para_tipo(tipo_env, "edilson", "autor", "posse ou porte de drogas para uso pessoal"):            
-            erros_avaliacao.append(tratar_mensagem_erro(
-                "Edilson Faca na Cinta deveria estar com envolvimento 'Autor' para o tipo 'Posse ou porte de drogas para uso pessoal'."
-            ))
-        if not tem_envolvimento_para_tipo(tipo_env, "zeca", "abordado", "dano"):           
-            erros_avaliacao.append(tratar_mensagem_erro(
-                "Zeca Quebra Tudo deveria estar com envolvimento 'Abordado' para o tipo 'Dano'."
-            ))
-        if not tem_envolvimento_para_tipo(tipo_env, "zeca", "autor", "dano"):            
-            erros_avaliacao.append(tratar_mensagem_erro(
-                "Zeca Quebra Tudo deveria estar com envolvimento 'autor' para o tipo 'Dano'."
-            ))
-        if not tem_envolvimento_para_tipo(tipo_env, "joaquim", "vitima", "lesao corporal leve - dolosa"):            
-            erros_avaliacao.append(tratar_mensagem_erro(
-                "Joaquim Sossego de Almeida deveria estar com envolvimento 'Vítima' para o tipo 'Lesão corporal leve - Dolosa'."
-            ))
-        if not tem_envolvimento_para_tipo(tipo_env, "idalina", "vitima", "dano"):            
-            erros_avaliacao.append(tratar_mensagem_erro(
-                "Idalina Paz da Costa deveria estar com envolvimento 'Vítima' para o tipo 'Dano'."
-            ))       
-
+        if not tem_envolvimento_para_tipo(tipo_env, ["lucas", "confusao"], "fiel depositario", "perturbacao do trabalho ou sossego alheios"):
+            erros_avaliacao.append(tratar_mensagem_erro("Lucas Confusão da Silva deveria estar com envolvimento 'Fiel depositário' para o tipo 'Perturbação do trabalho ou sossego alheios'."))
+        if not tem_envolvimento_para_tipo(tipo_env, ["lucas", "confusao"], "autor", "perturbacao do trabalho ou sossego alheios"):
+            erros_avaliacao.append(tratar_mensagem_erro("Lucas Confusão da Silva deveria estar com envolvimento 'Autor' para o tipo 'Perturbação do trabalho ou sossego alheios'."))
+        if not tem_envolvimento_para_tipo(tipo_env, ["lucas", "confusao"], "autor", "lesao corporal leve - dolosa"):
+            erros_avaliacao.append(tratar_mensagem_erro("Lucas Confusão da Silva deveria estar com envolvimento 'Autor' para o tipo 'Lesão corporal leve - Dolosa'."))
+        if not tem_envolvimento(tipo_env, ["lucas", "confusao"], "abordado"):
+            erros_avaliacao.append(tratar_mensagem_erro("Lucas Confusão da Silva deveria estar com envolvimento 'Abordado'."))
         
+        if not tem_envolvimento(tipo_env, ["marcos","faca"], "abordado"):
+            erros_avaliacao.append(tratar_mensagem_erro("Marcos Faca na Cinta deveria estar com envolvimento 'Abordado'."))
+        if not tem_envolvimento_para_tipo(tipo_env, ["marcos","faca"], "autor", "porte ou posse de arma branca ou simulacro"):
+            erros_avaliacao.append(tratar_mensagem_erro("Marcos Faca na Cinta deveria estar com envolvimento 'Autor' para o tipo 'Porte ou posse de arma branca ou simulacro'."))
+        if not tem_envolvimento_para_tipo(tipo_env, ["marcos","faca"], "autor", "posse ou porte de drogas para uso pessoal"):
+            erros_avaliacao.append(tratar_mensagem_erro("Marcos Faca na Cinta deveria estar com envolvimento 'Autor' para o tipo 'Posse ou porte de drogas para uso pessoal'."))
+        
+        if not tem_envolvimento_para_tipo(tipo_env, ["rafael", "quebra"], "abordado", "dano"):
+            erros_avaliacao.append(tratar_mensagem_erro("Rafael Quebra Tudo deveria estar com envolvimento 'Abordado' para o tipo 'Dano'."))
+        if not tem_envolvimento_para_tipo(tipo_env, ["rafael", "quebra"], "autor", "dano"):
+            erros_avaliacao.append(tratar_mensagem_erro("Rafael Quebra Tudo deveria estar com envolvimento 'Autor' para o tipo 'Dano'."))
+        
+        if not tem_envolvimento_para_tipo(tipo_env, ["carlos", "sossego"], "vitima", "lesao corporal leve - dolosa"):
+            erros_avaliacao.append(tratar_mensagem_erro("Carlos Sossego de Almeida deveria estar com envolvimento 'Vítima' para o tipo 'Lesão corporal leve - Dolosa'."))
+        
+        if not tem_envolvimento_para_tipo(tipo_env, ["ana", "paz"], "vitima", "dano"):
+            erros_avaliacao.append(tratar_mensagem_erro("Ana Paz da Costa deveria estar com envolvimento 'Vítima' para o tipo 'Dano'."))
+    
     if not erros_avaliacao:
         nota = 1
     

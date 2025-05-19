@@ -139,10 +139,10 @@
       </label>
 
       <label>
-        <select name="atividade" required>
+        <select name="atividade" id="atividade">
           <option value="">--Selecione--</option>
-          {% for key, (tipo, label) in options.items() %}
-            <option value="{{ key }}">{{ label }}</option>
+          {% for chave, (sigla, nome) in options.items() %}
+            <option value="{{ chave }}">{{ nome }}</option>
           {% endfor %}
         </select>
       </label>

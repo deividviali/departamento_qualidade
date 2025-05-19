@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Relatório de Atividades Filtradas</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background-color: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    th, td {
+      padding: 12px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+
+    th {
+      background-color: #1e88e5;
+      color: white;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+
+    .buttons {
+      text-align: center;
+    }
+
+    .buttons form {
+      display: inline-block;
+      margin: 0 10px;
+    }
+
+    .buttons button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-excel {
+      background-color: #43a047;
+      color: white;
+    }
+
+    .btn-voltar {
+      background-color: #757575;
+      color: white;
+    }
+
+    .btn-excel:hover {
+      background-color: #2e7d32;
+    }
+
+    .btn-voltar:hover {
+      background-color: #5c5c5c;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Relatório de Atividades Filtradas</h1>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Atividade</th>
+          <th>Protocolo</th>
+          <th>Status</th>
+          <th>Erros de Avaliação</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in data %}
+        <tr>
+          <td>{{ row.atividade }}</td>
+          <td>{{ row.protocolo }}</td>
+          <td>{{ row.status }}</td>
+          <td>{{ row.erros_avaliacao }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="buttons">
+      <form method="post" action="/gerar_relatorio">
+        <button class="btn-excel" type="submit">📥 Baixar Excel</button>
+      </form>
+
+      <form method="get" action="/instrutor">
+        <button class="btn-voltar" type="submit">🔙 Voltar</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<style>
+  #ultimos-registros table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  #ultimos-registros th, #ultimos-registros td {
+    padding: 10px;
+    border: 1px solid #ccc;
+    vertical-align: top;
+    text-align: left;
+  }
+
+  #ultimos-registros thead th {
+    background-color: #1e88e5;
+    color: white;
+  }
+
+  #ultimos-registros tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+</style>
+
+<table>
+  <thead>
+    <tr>
+      <th>Data</th>
+      <th>Aluno</th>
+      <th>Pelotão</th>
+      <th>Atividade</th>
+      <th>Protocolo</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in data %}
+    <tr>
+      <td>{{ row.data_formatada }}</td>
+      <td>{{ row.nome }}</td>
+      <td>{{ row.pelotao }}</td>
+      <td>{{ row.atividade }}</td>
+      <td>{{ row.protocolo }}</td>
+      <td>{{ row.status }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

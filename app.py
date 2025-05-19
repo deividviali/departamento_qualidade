@@ -1,10 +1,11 @@
-from flask import Flask, render_template, redirect, url_for, request, session, flash, send_file
+from flask import Flask, render_template, redirect, url_for, jsonify, request, session, flash, send_file
 from services.login_service import iniciar_navegador, efetuar_login
 from services.orquestracao_service import orquestrar_tarefas
 from utils.db import get_student, save_result, init_db
 from models.tarefa import Tarefa
 import sqlite3
 import pandas as pd
+from config.settings import INSTRUTOR_USERNAME, INSTRUTOR_PASSWORD
 from io import BytesIO
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from reportlab.lib import colors
@@ -17,6 +18,9 @@ from utils.db import init_db, get_student
 from flask import Flask, request, Response, render_template, redirect, url_for, flash, send_file
 from flask import flash, redirect, url_for, current_app
 from selenium.common.exceptions import InvalidSessionIdException
+from datetime import datetime
+import pytz
+
 
 app = Flask(__name__)
 app.secret_key = 'troque_para_uma_chave_secreta_segura'
@@ -24,17 +28,13 @@ app.secret_key = 'troque_para_uma_chave_secreta_segura'
 ATIVIDADES_OPCOES = {
     '1': ('A', 'Atividade A'),
     '2': ('B', 'Atividade B'),
-    # '3': ('C', 'Atividade C'),
-    # '4': ('D', 'Atividade D'),
+    '3': ('C', 'Atividade C'),
+    '4': ('D', 'Atividade D'),
     '5': ('E', 'Atividade E'),
     '6': ('F', 'Atividade F'),
-    # '7': ('PPE', 'Prova Prática de Execução'),  
-    '8': ('CFS25', 'Atividade Prática CFS2025'),  
-    
+    '7': ('PPE', 'Prova Prática de Execução'),  
+    '8': ('CFS25', 'Atividade Prática CFS2025'),      
 }
-
-INSTRUTOR_USERNAME = 'dinfo'
-INSTRUTOR_PASSWORD = 'dinfo2025'
 
 def check_auth(username, password):
     return username == INSTRUTOR_USERNAME and password == INSTRUTOR_PASSWORD
@@ -44,6 +44,40 @@ def authenticate():
         'Acesso restrito. Forneça usuário e senha.', 401,
         {'WWW-Authenticate': 'Basic realm="Área do Instrutor"'}
     )
+
+def aluno_esta_logado(re_val):
+    try:
+        with open(LOGADOS_ARQUIVO, 'r') as f:
+            logados = json.load(f)  
+        return logados.get(re_val, False) 
+    except:
+        return False  
+
+
+ESTADO_ARQUIVO = 'atividades_estado.json'
+def carregar_estado_atividades():
+    try:
+        with open(ESTADO_ARQUIVO, 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {sigla: True for _, (sigla, _) in ATIVIDADES_OPCOES.items()}
+
+def salvar_estado_atividades(estado):
+    with open(ESTADO_ARQUIVO, 'w') as f:
+        json.dump(estado, f)
+
+@app.route('/gerenciar_atividades', methods=['POST'])
+def gerenciar_atividades():
+    estado = carregar_estado_atividades()
+    
+    sigla = request.form.get('sigla')
+    novo_estado = request.form.get('estado') == 'on'
+    estado[sigla] = novo_estado
+    salvar_estado_atividades(estado)
+
+    return redirect(url_for('instrutor'))
+
+
 @app.route('/login_instrutor', methods=['GET', 'POST'])
 def login_instrutor():
     if request.method == 'POST':
@@ -59,6 +93,7 @@ def login_instrutor():
 
     return render_template('login_instrutor.html')
 
+
 @app.route('/logout_instrutor')
 def logout_instrutor():
     session.pop('instrutor', None)
@@ -68,36 +103,41 @@ def logout_instrutor():
 def instrutor():
     if not session.get('instrutor'):
         return redirect(url_for('login_instrutor'))
-    return render_template('instrutor.html')
+
+    estado = carregar_estado_atividades()
+    atividades = [(sigla, nome, estado.get(sigla, False)) for _, (sigla, nome) in ATIVIDADES_OPCOES.items()]
+    alunos_logados = contar_logados()
+    
+    return render_template('instrutor.html', atividades=atividades, alunos_logados=alunos_logados)
 
 @app.route('/gerar_relatorio', methods=['POST'])
 def gerar_relatorio():
-    pelotao = request.form.get('pelotao')
-    atividade = request.form.get('atividade')
+    try:
+        protocolos = session.get('protocolos_filtrados')
+
+        if not protocolos:
+            return "Nenhuma consulta foi feita anteriormente.", 400
+
+        conn = sqlite3.connect(DB_PATH)
+        placeholders = ','.join(['?'] * len(protocolos))
+        query = f"SELECT * FROM results WHERE protocolo IN ({placeholders})"
+        df = pd.read_sql_query(query, conn, params=protocolos)
+        conn.close()
+
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name='Relatório')
+
+        output.seek(0)
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name='relatorio_instrutor.xlsx'
+        )
     
-    conn = sqlite3.connect(DB_PATH)
-    query = "SELECT * FROM results WHERE 1=1"
-
-    if pelotao:
-        query += f" AND pelotao = '{pelotao}'"
-    if atividade:
-        query += f" AND atividade = '{atividade}'"
-
-    df = pd.read_sql_query(query, conn)
-    conn.close()
-
-    
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        df.to_excel(writer, index=False, sheet_name='Relatório')
-
-    output.seek(0)
-    return send_file(
-        output,
-        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        as_attachment=True,
-        download_name='relatorio_instrutor.xlsx'
-    )
+    except Exception as e:
+        return f"Erro interno: {str(e)}", 500
 
 @app.before_request
 def setup_db():
@@ -112,10 +152,12 @@ def login():
         if student:
             session['re'] = re_val
             session['nome'], session['pelotao'] = student
+            registrar_login_aluno(re_val) 
             return redirect(url_for('analyze'))
         else:
             flash('RE não encontrado.', 'error')
     return render_template('login.html')
+
 
 from flask import (
     Blueprint, render_template, request, session, redirect,
@@ -126,27 +168,34 @@ from flask import (
 def analyze():
     if 're' not in session:
         return redirect(url_for('login'))
+    
+    estado = carregar_estado_atividades()
+    atividades_ativas = {
+        chave: (sigla, nome)
+        for chave, (sigla, nome) in ATIVIDADES_OPCOES.items()
+        if estado.get(sigla, False)
+    }
 
     if request.method == 'GET':
         return render_template('analyze.html',
-                               options=ATIVIDADES_OPCOES,
+                               options=atividades_ativas,
                                re=session['re'])
 
     protocolo = request.form.get('protocolo','').strip()
     if not protocolo:
         flash('Protocolo é obrigatório.', 'error')
         return render_template('analyze.html',
-                               options=ATIVIDADES_OPCOES,
+                               options=atividades_ativas,
                                re=session['re'])
 
     escolha = request.form.get('atividade')
-    if not escolha or escolha not in ATIVIDADES_OPCOES:
+    if not escolha or escolha not in atividades_ativas:
         flash('Selecione uma atividade válida.', 'error')
         return render_template('analyze.html',
-                               options=ATIVIDADES_OPCOES,
+                               options=atividades_ativas,
                                re=session['re'])
 
-    tipos = [ATIVIDADES_OPCOES[escolha][0]]
+    tipos = [atividades_ativas[escolha][0]]
     tarefa = Tarefa(
         protocolo=protocolo,
         re=session['re'],
@@ -188,12 +237,24 @@ def analyze():
   ## Uso no PC Windons
 # @app.route('/analyze', methods=['GET', 'POST'])
 # def analyze():
+#     re_val = session.get('re')    
+#     if not re_val or not aluno_esta_logado(re_val):
+#         session.clear()  
+#         return redirect(url_for('login'))   
+    
 #     if 're' not in session:
-#         return redirect(url_for('login'))
+#         return redirect(url_for('login'))    
+
+#     estado = carregar_estado_atividades()
+#     atividades_ativas = {
+#         chave: (sigla, nome)
+#         for chave, (sigla, nome) in ATIVIDADES_OPCOES.items()
+#         if estado.get(sigla, False)
+#     }
     
 #     if request.method == 'GET':
 #         return render_template('analyze.html',
-#                                options=ATIVIDADES_OPCOES,
+#                                options=atividades_ativas,
 #                                re=session.get('re'))
    
 #     re_val = request.form.get('re', session['re']).strip()
@@ -201,17 +262,17 @@ def analyze():
 #     if not protocolo:
 #         flash('Protocolo é obrigatório.', 'error')
 #         return render_template('analyze.html',
-#                                options=ATIVIDADES_OPCOES,
+#                                options=atividades_ativas,
 #                                re=session['re'])
     
 #     escolha = request.form.get('atividade')
-#     if not escolha or escolha not in ATIVIDADES_OPCOES:
+#     if not escolha or escolha not in atividades_ativas:
 #         flash('Selecione uma atividade válida.', 'error')
 #         return render_template('analyze.html',
-#                             options=ATIVIDADES_OPCOES,
+#                             options=atividades_ativas,
 #                             re=session['re'])
 
-#     tipos = [ATIVIDADES_OPCOES[escolha][0]]    
+#     tipos = [atividades_ativas[escolha][0]]    
     
 #     print(f"DEBUG analyze: tipos = {tipos!r}")    
 
@@ -334,8 +395,72 @@ def quesitos():
 
 @app.route('/logout', methods=['GET', 'POST'])
 def logout():
+    re_val = session.get('re')
+    if re_val:
+        remover_login_aluno(re_val) 
     session.clear()
     return redirect(url_for('login'))
+
+
+@app.route('/consultar_relatorio', methods=['POST'])
+def consultar_relatorio():
+    pelotao = request.form.get('pelotao')
+    atividade = request.form.get('atividade')
+    matricula = request.form.get('matricula')
+
+    query = "SELECT atividade, protocolo, erros_avaliacao, nota FROM results WHERE 1=1"
+    params = []
+
+    if pelotao:
+        query += " AND pelotao = ?"
+        params.append(pelotao)
+    if atividade:
+        query += " AND atividade = ?"
+        params.append(atividade)
+    if matricula:
+        query += " AND re = ?"
+        params.append(matricula)
+
+    conn = sqlite3.connect(DB_PATH)
+    df = pd.read_sql_query(query, conn, params=params)
+    conn.close()
+
+    df['status'] = df['nota'].map({1: 'certo', 0: 'errado'})
+    data = df[['atividade', 'protocolo', 'status', 'erros_avaliacao']].to_dict(orient='records')
+   
+    session['protocolos_filtrados'] = df['protocolo'].tolist()
+
+    return render_template('resultado_instrutor.html', data=data)
+
+
+
+@app.route('/ultimos_registros')
+def ultimos_registros():
+    conn = sqlite3.connect(DB_PATH)
+    df = pd.read_sql_query(
+        "SELECT nome, pelotao, atividade, protocolo, nota, timestamp FROM results ORDER BY ROWID DESC LIMIT 10",
+        conn
+    )
+    conn.close()
+
+    df['nome'] = df['nome'].str.upper()
+    df['status'] = df['nota'].map({1: 'certo', 0: 'errado'})
+    
+    fuso_porto_velho = pytz.timezone("America/Porto_Velho")
+    def formatar_data(data_str):
+        try:            
+            dt_utc = datetime.strptime(data_str, "%Y-%m-%d %H:%M:%S").replace(tzinfo=pytz.utc)           
+            dt_local = dt_utc.astimezone(fuso_porto_velho)            
+            return dt_local.strftime("%d/%m/%Y %H:%M:%S")
+        except:
+            return "??/??/???? ??:??:??"
+    df['data_formatada'] = df['timestamp'].apply(formatar_data)
+
+    data = df[['nome', 'pelotao', 'atividade', 'data_formatada', 'protocolo', 'status']].to_dict(orient='records')
+
+    return render_template('partials/ultimos_registros.html', data=data)
+
+
 
 @app.errorhandler(ValueError)
 def handle_value_error(e):
@@ -358,6 +483,102 @@ def handle_invalid_session(e):
         'error'
     )
     return redirect(url_for('analyze'))
+
+
+LOGADOS_ARQUIVO = 'usuarios_logados.json'
+def registrar_login_aluno(re_val):
+    try:
+        with open(LOGADOS_ARQUIVO, 'r') as f:
+            logados = json.load(f)
+    except FileNotFoundError:
+        logados = {}
+
+    logados[re_val] = True
+    with open(LOGADOS_ARQUIVO, 'w') as f:
+        json.dump(logados, f)
+
+def limpar_logins_alunos():
+    with open(LOGADOS_ARQUIVO, 'w') as f:
+        json.dump({}, f)
+
+def contar_logados():
+    try:
+        with open(LOGADOS_ARQUIVO, 'r') as f:
+            logados = json.load(f)
+        return len(logados)
+    except:
+        return 0
+    
+def remover_login_aluno(re_val):
+    try:
+        with open(LOGADOS_ARQUIVO, 'r') as f:
+            logados = json.load(f)
+    except FileNotFoundError:
+        logados = {}
+
+    if re_val in logados:
+        del logados[re_val]
+
+    with open(LOGADOS_ARQUIVO, 'w') as f:
+        json.dump(logados, f)
+
+@app.route('/logout_todos_alunos', methods=['POST'])
+def logout_todos_alunos():
+    if not session.get('instrutor'):
+        return redirect(url_for('login_instrutor'))
+
+    limpar_logins_alunos()
+    flash("Todas as sessões de alunos foram encerradas.", "info")
+    return redirect(url_for('instrutor'))
+
+@app.route('/grafico_dados')
+def grafico_dados():
+    inicio = request.args.get("inicio")
+    fim = request.args.get("fim")
+    pelotao = request.args.get("pelotao")
+    atividade = request.args.get("atividade")
+    status = request.args.get("status")  
+
+    query = "SELECT atividade, pelotao, nota FROM results WHERE 1=1"
+    params = []
+
+    if inicio:
+        query += " AND DATE(timestamp) >= ?"
+        params.append(inicio)
+    if fim:
+        query += " AND DATE(timestamp) <= ?"
+        params.append(fim)
+    if pelotao and pelotao != "todos":
+        query += " AND pelotao = ?"
+        params.append(pelotao)
+    if atividade and atividade != "todas":
+        query += " AND atividade = ?"
+        params.append(atividade)
+    if status and status != "todos":
+        query += " AND nota = ?"
+        params.append(1 if status == "certo" else 0)    
+
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        df = pd.read_sql_query(query, conn, params=params)
+        conn.close()
+        print("RESULTADO:", df.head())
+    except Exception as e:
+        print("[ERRO NA QUERY]", e)
+        return jsonify({"erro": str(e)}), 500
+
+    if df.empty:
+        return jsonify([])
+
+    df['resultado'] = df['nota'].map({1: 'Certo', 0: 'Errado'})
+    dados = df.groupby(['atividade', 'resultado']).size().unstack(fill_value=0).reset_index()
+    return jsonify(dados.to_dict(orient='records'))
+
+
+@app.route('/grafico_full')
+def grafico_full():
+    return render_template('grafico_full.html')
+
 
 if __name__ == '__main__':
     app.run(debug=True)

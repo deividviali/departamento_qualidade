@@ -717,7 +717,7 @@ def corrigir_ppe(driver, tarefa, dados, erros_coleta):
         if not tem_envolvimento_para_tipo(tipo_env, ["marcos","faca"], "autor", "posse ou porte de drogas para uso pessoal"):
             erros_avaliacao.append(tratar_mensagem_erro("Marcos Faca na Cinta deveria estar com envolvimento 'Autor' para o tipo 'Posse ou porte de drogas para uso pessoal'."))
         
-        if not tem_envolvimento_para_tipo(tipo_env, ["rafael", "quebra"], "abordado", "dano"):
+        if not tem_envolvimento(tipo_env, ["rafael", "quebra"], "abordado"):        
             erros_avaliacao.append(tratar_mensagem_erro("Rafael Quebra Tudo deveria estar com envolvimento 'Abordado' para o tipo 'Dano'."))
         if not tem_envolvimento_para_tipo(tipo_env, ["rafael", "quebra"], "autor", "dano"):
             erros_avaliacao.append(tratar_mensagem_erro("Rafael Quebra Tudo deveria estar com envolvimento 'Autor' para o tipo 'Dano'."))
@@ -853,8 +853,8 @@ def corrigir_cfs25(driver, tarefa, dados, erros_coleta):
             erros_avaliacao.append(tratar_mensagem_erro(
                 "Élcio da Navalha deveria estar com envolvimento 'Autor' para o tipo 'Posse ou porte de drogas para uso pessoal'."
             ))
-        if not tem_envolvimento_para_tipo(tipo_env, "douglas", "abordado", "dano"):           
-            erros_avaliacao.append(tratar_mensagem_erro(
+        if not tem_envolvimento(tipo_env, "douglas", "abordado"):            
+            erros_avaliacao.append(tratar_mensagem_erro(        
                 "Douglas Arremesso da Silva deveria estar com envolvimento 'Abordado' para o tipo 'Dano'."
             ))
         if not tem_envolvimento_para_tipo(tipo_env, "douglas", "autor", "dano"):            

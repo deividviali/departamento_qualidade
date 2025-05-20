@@ -333,9 +333,10 @@ def corrigir_d(driver, tarefa, dados, erros_coleta):
             msg = f"Uma ou mais das naturezas obrigatórias não coletadas: {', '.join(missing)}"
             erros_avaliacao.append(tratar_mensagem_erro(msg))        
     
-    if not erros_avaliacao:        
+    if not erros_avaliacao:
         comandante_extraido = dados.get("comandante_guarnicao", "")
-        if normalize_str(comandante_extraido) != normalize(nome_tabela):
+        nomes_comandantes = normalize_str(comandante_extraido).split(';')  
+        if not any(normalize_str(nome_tabela) in nome.strip() for nome in nomes_comandantes):
             erros_avaliacao.append(tratar_mensagem_erro(
                 "Comandante da guarnição não confere com o nome do aluno"
             ))
@@ -440,9 +441,10 @@ def corrigir_e(driver, tarefa, dados, erros_coleta):
             msg = f"Uma ou mais das naturezas obrigatórias não coletadas: {', '.join(missing)}"
             erros_avaliacao.append(tratar_mensagem_erro(msg))        
     
-    if not erros_avaliacao:        
+    if not erros_avaliacao:
         comandante_extraido = dados.get("comandante_guarnicao", "")
-        if normalize_str(comandante_extraido) != normalize(nome_tabela):
+        nomes_comandantes = normalize_str(comandante_extraido).split(';')  
+        if not any(normalize_str(nome_tabela) in nome.strip() for nome in nomes_comandantes):
             erros_avaliacao.append(tratar_mensagem_erro(
                 "Comandante da guarnição não confere com o nome do aluno"
             ))
@@ -524,10 +526,11 @@ def corrigir_f(driver, tarefa, dados, erros_coleta):
         if missing:
             msg = f"Uma ou mais das naturezas obrigatórias não coletadas: {', '.join(missing)}"
             erros_avaliacao.append(tratar_mensagem_erro(msg))        
-    
-    if not erros_avaliacao:        
+
+    if not erros_avaliacao:
         comandante_extraido = dados.get("comandante_guarnicao", "")
-        if normalize_str(comandante_extraido) != normalize(nome_tabela):
+        nomes_comandantes = normalize_str(comandante_extraido).split(';')  
+        if not any(normalize_str(nome_tabela) in nome.strip() for nome in nomes_comandantes):
             erros_avaliacao.append(tratar_mensagem_erro(
                 "Comandante da guarnição não confere com o nome do aluno"
             ))
@@ -621,13 +624,15 @@ def corrigir_ppe(driver, tarefa, dados, erros_coleta):
     missing = [req for req in required_naturezas if req not in natureza_lista]
     if missing:
         msg = f"Uma ou mais das naturezas obrigatórias não coletadas: {', '.join(missing)}"
-        erros_avaliacao.append(tratar_mensagem_erro(msg))
-    
-    comandante_extraido = dados.get("comandante_guarnicao", "")
-    if normalize_str(comandante_extraido) != normalize(nome_tabela):
-        erros_avaliacao.append(tratar_mensagem_erro(
-            "Comandante da guarnição não confere com o nome do aluno"
-        ))
+        erros_avaliacao.append(tratar_mensagem_erro(msg))    
+
+    if not erros_avaliacao:
+        comandante_extraido = dados.get("comandante_guarnicao", "")
+        nomes_comandantes = normalize_str(comandante_extraido).split(';')  
+        if not any(normalize_str(nome_tabela) in nome.strip() for nome in nomes_comandantes):
+            erros_avaliacao.append(tratar_mensagem_erro(
+                "Comandante da guarnição não confere com o nome do aluno"
+            ))        
     
     relato_norm = normalize_str(dados.get("relato_policial", ""))
     relato_norm = " ".join(relato_norm.split())
@@ -767,14 +772,14 @@ def corrigir_cfs25(driver, tarefa, dados, erros_coleta):
         if missing:
             msg = f"Uma ou mais das naturezas obrigatórias não coletadas: {', '.join(missing)}"
             erros_avaliacao.append(tratar_mensagem_erro(msg))        
-    
-    if not erros_avaliacao:               
+        
+    if not erros_avaliacao:
         comandante_extraido = dados.get("comandante_guarnicao", "")
-        if normalize_str(comandante_extraido) != normalize(nome_tabela):
+        nomes_comandantes = normalize_str(comandante_extraido).split(';')  
+        if not any(normalize_str(nome_tabela) in nome.strip() for nome in nomes_comandantes):
             erros_avaliacao.append(tratar_mensagem_erro(
                 "Comandante da guarnição não confere com o nome do aluno"
-            ))
-            
+            ))            
 
     if not erros_avaliacao:        
         relato_norm = normalize_str(dados.get("relato_policial", ""))

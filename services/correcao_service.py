@@ -623,7 +623,7 @@ def corrigir_ppe(driver, tarefa, dados, erros_coleta):
     natureza_lista = [n.strip().lower() for n in natureza_texto.split(";") if n.strip()]
     missing = [req for req in required_naturezas if req not in natureza_lista]
     if missing:
-        msg = f"Uma ou mais das naturezas obrigatórias não coletadas: {', '.join(missing)}"
+        msg = f"Não consta todas as naturezas solicitadas para a questão, verifique se estão de acordo com o que foi solicitado 'dano, posse ou porte de drogas para uso pessoal, perturbação do trabalho ou sossego alheios, porte ou posse de arma branca ou simulacro e lesão corporal leve - dolosa'"
         erros_avaliacao.append(tratar_mensagem_erro(msg))    
 
     if not erros_avaliacao:
@@ -646,7 +646,7 @@ def corrigir_ppe(driver, tarefa, dados, erros_coleta):
     drogas = dados.get("tipo_drogas", "").lower()
     missing = [req for req in required_envolvidos if req not in drogas]
     if missing:
-        msg = f"Nenhum dos envolvidos possui o tipo de drogas solicitado: {', '.join(missing)}"
+        msg = f"Não foi identificado o tipo situação 'apreendida' para a droga cadastrada"
         erros_avaliacao.append(tratar_mensagem_erro(msg))  
     
     if isinstance(dados.get("tipo_situacao"), list):
@@ -656,8 +656,7 @@ def corrigir_ppe(driver, tarefa, dados, erros_coleta):
         encontrou_portao = False
 
         for item in dados["tipo_situacao"]:
-            dados_str = normalize(item.get("dados", ""))
-            print(f"[DEBUG] Dados normalizados: {dados_str}")
+            dados_str = normalize(item.get("dados", ""))            
         
             if "caixa" in dados_str and "som" in dados_str:
                 encontrou_caixa_de_som = True
@@ -770,7 +769,7 @@ def corrigir_cfs25(driver, tarefa, dados, erros_coleta):
         natureza_lista = [n.strip().lower() for n in natureza_texto.split(";") if n.strip()]        
         missing = [req for req in required_naturezas if req not in natureza_lista]
         if missing:
-            msg = f"Uma ou mais das naturezas obrigatórias não coletadas: {', '.join(missing)}"
+            msg = f"Não consta todas as naturezas solicitadas para a questão, verifique se estão de acordo com o que foi solicitado 'dano, posse ou porte de drogas para uso pessoal, perturbação do trabalho ou sossego alheios, porte ou posse de arma branca ou simulacro e lesão corporal leve - dolosa'"
             erros_avaliacao.append(tratar_mensagem_erro(msg))        
         
     if not erros_avaliacao:
@@ -797,7 +796,7 @@ def corrigir_cfs25(driver, tarefa, dados, erros_coleta):
         drogas = dados.get("tipo_drogas", "").lower()
         missing = [req for req in required_envolvidos if req not in drogas]
         if missing:
-            msg = f"Nenhum dos envolvidos possui o tipo de drogas solicitado: {', '.join(missing)}"
+            msg = f"Não foi identificado o tipo situação 'apreendida' para a droga cadastrada"
             erros_avaliacao.append(tratar_mensagem_erro(msg)) 
                 
     if not erros_avaliacao and isinstance(dados.get("tipo_situacao"), list):        

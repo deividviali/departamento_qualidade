@@ -151,7 +151,7 @@ def login():
         student = get_student(re_val)
         if student:
             session['re'] = re_val
-            session['nome'], session['pelotao'] = student
+            session['nome'], session['pelotao'], session['curso'] = student
             registrar_login_aluno(re_val) 
             return redirect(url_for('analyze'))
         else:
@@ -188,19 +188,25 @@ def analyze():
                                options=atividades_ativas,
                                re=session['re'])
 
-    escolha = request.form.get('atividade')
-    if not escolha or escolha not in atividades_ativas:
+    sigla_atividade = request.form.get('atividade')
+    chave_correspondente = next(
+        (chave for chave, (sigla, _) in atividades_ativas.items() if sigla == sigla_atividade),
+        None
+    )
+    if not chave_correspondente:
         flash('Selecione uma atividade válida.', 'error')
         return render_template('analyze.html',
-                               options=atividades_ativas,
-                               re=session['re'])
+                            options=atividades_ativas,
+                            re=session['re'])
+    tipos = [sigla_atividade]
 
-    tipos = [atividades_ativas[escolha][0]]
+
     tarefa = Tarefa(
         protocolo=protocolo,
         re=session['re'],
         nome=session['nome'],
         pelotao=session['pelotao'],
+        curso=session.get('curso', ''),
         atividades=tipos
     )
 
@@ -234,7 +240,7 @@ def analyze():
         }
     )
     
-  ## Uso no PC Windons
+  # Uso no PC Windons
 # @app.route('/analyze', methods=['GET', 'POST'])
 # def analyze():
 #     re_val = session.get('re')    
@@ -265,14 +271,17 @@ def analyze():
 #                                options=atividades_ativas,
 #                                re=session['re'])
     
-#     escolha = request.form.get('atividade')
-#     if not escolha or escolha not in atividades_ativas:
+#     sigla_atividade = request.form.get('atividade')
+#     chave_correspondente = next(
+#         (chave for chave, (sigla, _) in atividades_ativas.items() if sigla == sigla_atividade),
+#         None
+#     )
+#     if not chave_correspondente:
 #         flash('Selecione uma atividade válida.', 'error')
 #         return render_template('analyze.html',
 #                             options=atividades_ativas,
 #                             re=session['re'])
-
-#     tipos = [atividades_ativas[escolha][0]]    
+#     tipos = [sigla_atividade]    
     
 #     print(f"DEBUG analyze: tipos = {tipos!r}")    
 
@@ -283,6 +292,7 @@ def analyze():
 #         re=session['re'],
 #         nome=session['nome'],
 #         pelotao=session['pelotao'],
+#         curso=session.get('curso', ''),
 #         atividades=tipos        
 #     )
 #     print("DEBUG analyze: chamando orquestrar_tarefas")
@@ -305,12 +315,12 @@ def report():
     re_val = session['re']   
     conn = sqlite3.connect(DB_PATH)    
     df = pd.read_sql_query(
-        "SELECT atividade, protocolo, erros_avaliacao, nota FROM results WHERE re = ?",
+        "SELECT atividade, protocolo, erros_avaliacao, nota, curso FROM results WHERE re = ?",
         conn, params=(re_val,)
     )
     conn.close()
     df['status'] = df['nota'].map({1: 'certo', 0: 'errado'})
-    data = df[['atividade','protocolo','status','erros_avaliacao']]\
+    data = df[['atividade','protocolo','status','erros_avaliacao', 'curso']]\
              .to_dict(orient='records')
 
     return render_template('report.html', data=data, re=re_val)
@@ -407,8 +417,9 @@ def consultar_relatorio():
     pelotao = request.form.get('pelotao')
     atividade = request.form.get('atividade')
     matricula = request.form.get('matricula')
+    curso = request.form.get('curso')
 
-    query = "SELECT atividade, protocolo, erros_avaliacao, nota FROM results WHERE 1=1"
+    query = "SELECT rowid, nome, curso, atividade, protocolo, erros_avaliacao, nota FROM results WHERE 1=1"
     params = []
 
     if pelotao:
@@ -420,13 +431,18 @@ def consultar_relatorio():
     if matricula:
         query += " AND re = ?"
         params.append(matricula)
+    if curso:
+        query += " AND curso = ?"       
+        params.append(curso)
+
+    query += " ORDER BY rowid DESC"
 
     conn = sqlite3.connect(DB_PATH)
     df = pd.read_sql_query(query, conn, params=params)
     conn.close()
 
     df['status'] = df['nota'].map({1: 'certo', 0: 'errado'})
-    data = df[['atividade', 'protocolo', 'status', 'erros_avaliacao']].to_dict(orient='records')
+    data = df[['rowid', 'nome', 'curso', 'atividade', 'protocolo', 'status', 'erros_avaliacao']].to_dict(orient='records')
    
     session['protocolos_filtrados'] = df['protocolo'].tolist()
 
@@ -538,6 +554,7 @@ def grafico_dados():
     pelotao = request.args.get("pelotao")
     atividade = request.args.get("atividade")
     status = request.args.get("status")  
+    curso = request.args.get("curso")
 
     query = "SELECT atividade, pelotao, nota FROM results WHERE 1=1"
     params = []
@@ -556,7 +573,10 @@ def grafico_dados():
         params.append(atividade)
     if status and status != "todos":
         query += " AND nota = ?"
-        params.append(1 if status == "certo" else 0)    
+        params.append(1 if status == "certo" else 0)   
+    if curso and curso != "todos":  
+        query += " AND curso = ?"
+        params.append(curso) 
 
     try:
         conn = sqlite3.connect(DB_PATH)

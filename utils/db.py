@@ -17,7 +17,8 @@ def init_db():
         CREATE TABLE IF NOT EXISTS students (
             re TEXT PRIMARY KEY,
             nome TEXT,
-            pelotao TEXT
+            pelotao TEXT,
+            curso TEXT
         )
     ''')
     c.execute('''
@@ -27,6 +28,7 @@ def init_db():
             re TEXT,
             nome TEXT,
             pelotao TEXT,
+            curso TEXT, 
             data_oc TEXT,
             relato_policial TEXT,
             complemento_oc TEXT,
@@ -67,8 +69,8 @@ def load_reference_from_csv(csv_path: str):
         reader = csv.DictReader(f, delimiter=';', skipinitialspace=True)
         for row in reader:
             c.execute(
-                "INSERT OR REPLACE INTO students (re, nome, pelotao) VALUES (?, ?, ?)",
-                (row['re'], row['nome'], row.get('pelotao', ''))
+                "INSERT OR REPLACE INTO students (re, nome, pelotao, curso) VALUES (?, ?, ?, ?)",
+                (row['re'], row['nome'], row.get('pelotao', ''), row.get('curso', ''))
             )
     conn.commit()
     conn.close()
@@ -78,7 +80,7 @@ def load_reference_from_csv(csv_path: str):
 def get_student(re_val: str):
     conn = get_connection()
     c = conn.cursor()
-    c.execute("SELECT nome, pelotao FROM students WHERE re = ?", (re_val,))
+    c.execute("SELECT nome, pelotao, curso FROM students WHERE re = ?", (re_val,))
     row = c.fetchone()
     conn.close()
     return row
@@ -92,7 +94,7 @@ def save_result(atividade: str, resultado: Resultado):
     data['atividade'] = atividade
     c.execute('''
         INSERT OR REPLACE INTO results (
-            atividade ,protocolo, re, nome, pelotao,
+            atividade ,protocolo, re, nome, pelotao, curso,
             data_oc, relato_policial, complemento_oc,
             nome_geracao, info_protocolo, status,
             nota, codigo_fechamento, origem_abertura_oc,
@@ -100,9 +102,9 @@ def save_result(atividade: str, resultado: Resultado):
             objetos, tipo_situacao, veiculos, tipo_veiculos,
             armas, tipo_armas, drogas, tipo_drogas,
             natureza, erro_coleta_dados, erros_avaliacao
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
-        data.get('atividade'), data.get('protocolo'), data.get('re'), data.get('nome'), data.get('pelotao'),
+        data.get('atividade'), data.get('protocolo'), data.get('re'), data.get('nome'), data.get('pelotao'), data.get('curso'),
         data.get('data_oc'), data.get('relato_policial'), data.get('complemento_oc'),
         data.get('nome_geracao'), data.get('info_protocolo'), data.get('status'),
         data.get('nota'), data.get('codigo_fechamento'), data.get('origem_abertura_oc'),

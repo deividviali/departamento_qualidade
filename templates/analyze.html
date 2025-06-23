@@ -16,7 +16,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh;
+      min-height: 100vh;
     }
 
     h1 {
@@ -25,6 +25,7 @@
 
     form {
       background-color: #fff;
+      margin-bottom: 20px;
       padding: 30px;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
@@ -79,7 +80,17 @@
       margin-top: -10px;
     }
 
-    
+    #descricao-atividade {
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 15px;
+      display: none;
+      width: 400px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.05);
+    }
+
     #overlay {
       position: fixed;
       top: 0; left: 0;
@@ -106,6 +117,28 @@
       animation: spin 1s linear infinite;
       margin: 0 auto 15px;
     }
+    #descricao-atividade strong {
+      font-size: 16px;
+      display: block;
+      margin-bottom: 2px;
+    }
+    #descricao-atividade p {
+      margin: 0 0 3px 0;
+      font-size: 14px;
+    }
+
+    #descricao-atividade ul {
+      padding-left: 20px;
+      margin: 0;
+      list-style-type: disc;
+      font-size: 14px;
+      color: #333;
+    }
+
+    #descricao-atividade li {
+      margin-bottom: 4px;
+    }
+
 
     @keyframes spin {
       0% { transform: rotate(0deg); }
@@ -120,9 +153,9 @@
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         <ul>
-        {% for category, msg in messages %}
-          <li class="{{ category }}">{{ msg }}</li>
-        {% endfor %}
+          {% for category, msg in messages %}
+            <li class="{{ category }}">{{ msg }}</li>
+          {% endfor %}
         </ul>
       {% endif %}
     {% endwith %}
@@ -139,9 +172,10 @@
       </label>
 
       <label>
+        Atividade:
         <select name="atividade" id="atividade">
           <option value="">--Selecione--</option>
-          {% for chave, (sigla, nome) in options.items() %}
+          {% for chave, (chave, nome) in options.items() %}
             <option value="{{ chave }}">{{ nome }}</option>
           {% endfor %}
         </select>
@@ -150,30 +184,116 @@
       <button type="submit">Verificar</button>
     </form>
 
+    <div id="descricao-atividade"></div>
+
     <div class="links">
       <a href="{{ url_for('report') }}">Relatório do Aluno</a> |
-      <a href="{{ url_for('logout') }}">Logout</a> |     
-      <a href="{{ url_for('quesitos') }}" class="btn-descricao">Descrição das atividades</a> 
+      <a href="{{ url_for('logout') }}">Logout</a> |
+      <a href="{{ url_for('quesitos') }}">Descrição das atividades</a>
     </div>
   </div>
 
-  
   <script>
-    function mostrarCarregando() {
-      const overlay = document.createElement('div');
-      overlay.id = 'overlay';
-      overlay.innerHTML = `
-        <div class="loader-container">
-          <div class="loader"></div>
-          <p>Analisando dados, por favor aguarde...</p>
-        </div>
-      `;
-      document.body.appendChild(overlay);
-    }
+    const descricoes = {
+      'A': `<strong></strong><p>A ocorrência deverá atender, obrigatoriamente, aos seguintes requisitos:</p>
+            <ul>
+              <li>I. Ser gerada via web e empenhada para a guarnição do respectivo aluno</li>
+              <li>II. Criada pelo próprio aluno</li>
+              <li>III. Aluno como comandante da guarnição logada</li>
+              <li>IV. CF “Averiguação Policial sem Alteração”</li>
+              <li>V. Um único envolvido com tipo “abordado”</li>
+            </ul>`,
+      'B': `<strong></strong><p>A ocorrência deverá atender, obrigatoriamente, aos seguintes requisitos:</p>
+            <ul>
+              <li>I. Ser gerada via web e empenhada para a guarnição do respectivo aluno</li>
+              <li>II. Ser criada pelo próprio aluno no ambiente web</li>
+              <li>III. Aluno como comandante da guarnição logada</li>
+              <li>IV. Ser encerrada mediante o registro do CF “Resolvido no Local</li>
+            </ul>`,
+      'C': `<strong></strong><p>A ocorrência deverá atender, obrigatoriamente, aos seguintes requisitos:</p>
+            <ul>
+              <li>Atividade NÃO disponível para correção;</li>              
+            </ul>`,
+      'D': `<strong></strong><p>A ocorrência deverá atender, obrigatoriamente, aos seguintes requisitos:</p>
+            <ul>
+              <li>I. Estar logada como comandante da guarnição</li>
+              <li>II. A ocorrência pode ser iniciada via web ou direto pelo PMRO Mobile</li>
+              <li>III. Ser encerrada com CF “PA”</li> 
+              <li>IV. Naturezas: “Lesão Corporal Leve Dolosa” e “Posse Irregular de Arma de Fogo de uso permitido”</li>
+              <li>V. Registrar que o autor foi abordado</li>
+              <li>VI. Conter o cadastro de dois envolvidos, sendo um vítima e um autor</li>
+              <li>VII. Cadastrar arma de fogo</li>
+              <li>VIII. Cadastrar objeto do tipo “faca/utensílio de cozinha”</li>
+              <li>IX. Produzir o relato policial com apoio de inteligência artificial</li>
+            </ul>`,
+      'E': `<strong></strong><p>A ocorrência deverá atender, obrigatoriamente, aos seguintes requisitos:</p>    
+            <ul>
+              <li>I. Ser encerrada com CF “Termo Circustanciado”</li>
+              <li>II. Ter as naturezas “Perturbação do Sossego” "Dano" e “Desacato”</li>
+              <li>III. Incluir, um objeto, devendo conter a situação: apreendido por infração penal; depósito fiel</li>
+              <li>IV.  Conter o registro de um envolvido, cujo tipo de participação tenha “Fiel Depositáro”</li>
+              <li>V. Estar logada como comandante da guarnição</li>
+            </ul>`,
+      'F': `<strong></strong><p>A ocorrência deverá atender, obrigatoriamente, aos seguintes requisitos:</p>
+            <ul>
+              <li>I. Ser encerrada com CF “Termo Circustanciado”</li>
+              <li>II. Ter as naturezas “Sinistro de Trânsito com Pessoa Ferida ou Morta”, “Posse ou Porte de Drogas para Uso Pessoal” e “Lesão Corporal Culposa em Sinistro de Trânsito”</li>
+              <li>III. Conter o registro dos envolvidos com o tipo de participação fiel depositáro e abordado</li>
+              <li>IV.  Conter o cadastro de uma droga como apreendida por infração penal</li>
+              <li>V. Ter o cadastro de um veículo com a situação apreendido por infracao penal e deposito fiel</li>
+              <li>VI. Produzir o relato policial com apoio de inteligência artificial</li>
+              <li>VII. Estar logada como comandante da guarnição</li>
+            </ul>`,
+      'CFS25': `<strong></strong><p>A ocorrência deverá atender, obrigatoriamente, aos seguintes requisitos:</p>
+            <ul>
+              <li>ATIVIDADE TESTE PARA TREINO DA PPE</li>
+              <li>I. Estar logada como comandante da guarnição</li>
+              <li>II. Casdastro dos envolvidos e seus vínculos conforme ocorrrência repassada pelo instrutor</li>  
+              <li>III. Casdastro dos objetos e seus vínculos conforme ocorrrência repassada pelo instrutor</li> 
+              <li>IV. Casdastro dos Drogas e seus vínculos conforme ocorrrência repassada pelo instrutor</li> 
+              <li>V. Casdastro das Naturezas conforme ocorrrência repassada pelo instrutor</li>
+              <li>VI. Casdastro do Código de Fechamento (CF) conforme ocorrrência repassada pelo instrutor</li>          
+            </ul>`,
+      'PPE': `<strong></strong><p>A ocorrência deverá atender, obrigatoriamente, aos seguintes requisitos:</p>
+            <ul>
+              <li>ATIVIDADE PRÁTICA - PPE</li>
+              <li>I. Estar logada como comandante da guarnição</li>
+              <li>II. Casdastro dos envolvidos e seus vínculos conforme ocorrrência repassada pelo instrutor</li>  
+              <li>III. Casdastro dos objetos e seus vínculos conforme ocorrrência repassada pelo instrutor</li> 
+              <li>IV. Casdastro dos Drogas e seus vínculos conforme ocorrrência repassada pelo instrutor</li> 
+              <li>V. Casdastro das Naturezas conforme ocorrrência repassada pelo instrutor</li>
+              <li>VI. Casdastro do Código de Fechamento (CF) conforme ocorrrência repassada pelo instrutor</li>          
+            </ul>`,
+    };
 
-    document.querySelector('form').addEventListener('submit', function() {
-      mostrarCarregando();
+    document.addEventListener("DOMContentLoaded", function () {
+      const selectAtividade = document.querySelector('#atividade');
+      const divDescricao = document.getElementById("descricao-atividade");
+
+      selectAtividade.addEventListener("change", function () {
+        const valor = this.value;
+        if (descricoes[valor]) {
+          divDescricao.innerHTML = `<strong>Descrição da Atividade ${valor}:</strong><br>${descricoes[valor]}`;
+          divDescricao.style.display = "block";
+        } else {
+          divDescricao.style.display = "none";
+        }
+      });
+
+      // Overlay de carregamento ao enviar o formulário
+      document.querySelector('form').addEventListener('submit', function () {
+        const overlay = document.createElement('div');
+        overlay.id = 'overlay';
+        overlay.innerHTML = `
+          <div class="loader-container">
+            <div class="loader"></div>
+            <p>Analisando dados, por favor aguarde...</p>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+      });
     });
   </script>
 </body>
 </html>
+

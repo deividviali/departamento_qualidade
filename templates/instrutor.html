@@ -130,6 +130,12 @@
         <label for="matricula">Matrícula:</label>
         <input type="number" id="matricula" name="matricula" placeholder="Digite a matrícula">
 
+        <label for="curso">Curso:</label>
+        <select name="curso" id="curso">
+          <option value="">--Todos--</option>
+          <option value="CFS25 II">Curso de Formação de Sargentos_2025_II (CFSII)</option>          
+        </select>
+
         <label for="pelotao">Pelotão:</label>
         <select name="pelotao" id="pelotao">
           <option value="">--Todos--</option>
@@ -147,7 +153,7 @@
           <option value="D">Atividade D</option>
           <option value="E">Atividade E</option>
           <option value="F">Atividade F</option>
-          <option value="CFS25">Atividade CFS25</option>
+          <option value="CFS25 II">Atividade CFS25 II</option>
           <option value="PPE">Prova Prática de Execução</option>
         </select>
 
@@ -173,11 +179,16 @@
         <input type="date" id="filtroInicio">
         <input type="date" id="filtroFim">
 
+        <select id="filtroCurso">
+          <option value="todos">Todos os Cursos</option>          
+          <option value="CFS25 II">CFS25 II</option>          
+        </select>
+
         <select id="filtroPelotao">
           <option value="todos">Todos os Pelotões</option>
-          <option value="1º Pel">1º Pel</option>
-          <option value="2º Pel">2º Pel</option>
-          <option value="3º Pel">3º Pel</option>
+          <option value="1">1º Pel</option>
+          <option value="2">2º Pel</option>
+          <option value="3">3º Pel</option>
         </select>
 
         <select id="filtroAtividade">
@@ -188,7 +199,7 @@
           <option value="D">Atividade D</option>
           <option value="E">Atividade E</option>
           <option value="F">Atividade F</option>
-          <option value="CFS25">CFS25</option>
+          <option value="CFS25 II">CFS25 II</option>
           <option value="PPE">PPE</option>
         </select>
 
@@ -253,91 +264,79 @@
   <script>
   let chart;
   function carregarGrafico() {
-    const inicio = document.getElementById("filtroInicio").value;
-    const fim = document.getElementById("filtroFim").value;
-    const pelotao = document.getElementById("filtroPelotao").value;
-    const atividade = document.getElementById("filtroAtividade").value;
-    const status = document.getElementById("filtroStatus").value;
+  const inicio = document.getElementById("filtroInicio").value;
+  const fim = document.getElementById("filtroFim").value;
+  const pelotao = document.getElementById("filtroPelotao").value;
+  const atividade = document.getElementById("filtroAtividade").value;
+  const status = document.getElementById("filtroStatus").value;
+  const curso = document.getElementById("filtroCurso").value;
 
-    const url = `/grafico_dados?inicio=${inicio}&fim=${fim}&pelotao=${pelotao}&atividade=${atividade}&status=${status}`;
+  const url = `/grafico_dados?inicio=${inicio}&fim=${fim}&pelotao=${pelotao}&atividade=${atividade}&status=${status}&curso=${curso}`;
 
-    fetch(url)
-      .then(res => res.json())
-      .then(dados => {
-        const labels = dados.map(d => d.atividade);
-        const certo = dados.map(d => d.Certo || 0);
-        const errado = dados.map(d => d.Errado || 0);
+  fetch(url)
+    .then(res => res.json())
+    .then(dados => {
+      const labels = dados.map(d => d.atividade);
+      const certo = dados.map(d => d.Certo || 0);
+      const errado = dados.map(d => d.Errado || 0);
 
-        const data = {
-          labels,
-          datasets: [
-            {
-              label: "Certo",
-              data: certo,
-              backgroundColor: "#2196f3"
+      const data = {
+        labels,
+        datasets: [
+          {
+            label: "Certo",
+            data: certo,
+            backgroundColor: "#2196f3"
+          },
+          {
+            label: "Errado",
+            data: errado,
+            backgroundColor: "#f44336"
+          }
+        ]
+      };
+
+      const config = {
+        type: "bar",
+        data,
+        options: {
+          responsive: true,
+          layout: {
+            padding: { top: 20, bottom: 20, left: 20, right: 20 }
+          },
+          plugins: {
+            legend: { position: 'top' },
+            title: {
+              display: true,
+              text: "Desempenho por Atividade",
+              font: { size: 18 }
             },
-            {
-              label: "Errado",
-              data: errado,
-              backgroundColor: "#f44336"
-            }
-          ]
-        };
-
-        const config = {
-          type: "bar",
-          data,
-          options: {
-            responsive: true,
-            layout: {
-              padding: {
-                top: 20,
-                bottom: 20,
-                left: 20,
-                right: 20
-              }
-            },
-            plugins: {
-              legend: { position: 'top' },
-              title: {
-                display: true,
-                text: "Desempenho por Atividade",
-                font: { size: 18 }
-              },
-              datalabels: {
-                anchor: 'end',
-                align: 'top',
-                color: '#000',
-                font: {
-                  size: 12,
-                  weight: 'bold'
-                },
-                formatter: value => value
-              }
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                title: {
-                  display: true,
-                  text: 'Quantidade de Ocorrências'
-                }
-              },
-              x: {
-                title: {
-                  display: true,
-                  text: 'Atividade'
-                }
-              }
+            datalabels: {
+              anchor: 'end',
+              align: 'top',
+              color: '#000',
+              font: { size: 12, weight: 'bold' },
+              formatter: value => value
             }
           },
-          plugins: [ChartDataLabels]
-        };
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: { display: true, text: 'Quantidade de Ocorrências' }
+            },
+            x: {
+              title: { display: true, text: 'Atividade' }
+            }
+          }
+        },
+        plugins: [ChartDataLabels]
+      };
 
-        if (chart) chart.destroy();
-        chart = new Chart(document.getElementById("graficoRespostas"), config);
-      });
-  }
+      if (chart) chart.destroy();
+      chart = new Chart(document.getElementById("graficoRespostas"), config);
+    });
+}
+
 
   carregarGrafico();
   </script>

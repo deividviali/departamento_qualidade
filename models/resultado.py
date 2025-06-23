@@ -9,21 +9,24 @@ class Resultado:
         protocolo: str,
         re: str,
         nome: str,
-        pelotao: str,
+        pelotao: str,        
         dados: Dict[str, str],
         nota: int,
         erros_coleta: List[str],
-        erros_avaliacao: List[str]
+        erros_avaliacao: List[str],
+        curso: str = ""
     ):
         self.atividade = atividade
         self.protocolo = protocolo
         self.re = re
         self.nome = nome
-        self.pelotao = pelotao
+        self.pelotao = pelotao        
         self.dados = dados
         self.nota = nota
         self.erros_coleta = erros_coleta
         self.erros_avaliacao = erros_avaliacao
+        self.curso = curso
+        
 
     def as_dict(self):
         base = {
@@ -32,6 +35,7 @@ class Resultado:
             're': self.re,
             'nome': self.nome,
             'pelotao': self.pelotao,
+            'curso': self.curso,
         }
         base.update(self.dados)
         base.update({

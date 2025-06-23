@@ -89,6 +89,9 @@
     <table>
       <thead>
         <tr>
+          <th>ID</th>
+          <th>Nome</th>
+          <th>Curso</th>
           <th>Atividade</th>
           <th>Protocolo</th>
           <th>Status</th>
@@ -98,6 +101,9 @@
       <tbody>
         {% for row in data %}
         <tr>
+          <td>{{ row.rowid }}</td>
+          <td>{{ row.nome }}</td>
+          <td>{{ row.curso }}</td>
           <td>{{ row.atividade }}</td>
           <td>{{ row.protocolo }}</td>
           <td>{{ row.status }}</td>

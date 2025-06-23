@@ -9,10 +9,12 @@ class Tarefa:
         re: str,
         nome: str,
         pelotao: str,
-        atividades: List[str]
+        atividades: List[str],
+        curso: str = ""
     ):
         self.protocolo = protocolo
         self.re = re
         self.nome = nome
         self.pelotao = pelotao
         self.atividades = atividades
+        self.curso = curso

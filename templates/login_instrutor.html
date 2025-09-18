@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -62,10 +62,137 @@
       {% endfor %}
     {% endwith %}
 
-    <form method="POST">
+    <form action="{{ url_for('login_instrutor') }}" method="POST">
       <input type="text" name="usuario" placeholder="Usuário" required>
       <input type="password" name="senha" placeholder="Senha" required>
       <button type="submit">Entrar</button>
+    </form>
+  </div>
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Login Instrutor</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      background-color: #444; /* fundo cinza escuro */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      color: #333;
+    }
+
+    .logo-top {
+      margin-top: 20px;
+      margin-bottom: 30px;
+    }
+
+    .logo-top img {
+      max-width: 200px;
+      height: auto;
+      display: block;
+    }
+
+    .login-box {
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .login-box h2 {
+      margin-bottom: 20px;
+      color: #1e88e5;
+      font-size: 20px;
+    }
+
+    .login-box input {
+      width: 90%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 5px;
+      border: 1px solid #999;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .login-box button {
+      padding: 8px 20px; /* 🔹 botão menor */
+      background-color: #1e88e5;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 15px;
+      font-size: 14px;
+      width: auto;       /* 🔹 não ocupa toda a largura */
+      min-width: 120px;  /* 🔹 tamanho mínimo para não ficar pequeno demais */
+      text-align: center;
+    }
+
+    .login-box button:hover {
+      background-color: #1565c0;
+    }
+
+    /* Botão Voltar menor e alinhado à esquerda */
+    .btn-voltar {
+      background-color: #777;
+      color: white;
+      padding: 6px 14px;
+      border-radius: 5px;
+      font-weight: bold;
+      text-decoration: none;
+      font-size: 13px;
+      align-self: flex-start;
+    }
+
+    .btn-voltar:hover {
+      background-color: #555;
+    }
+
+    .error {
+      color: red;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  
+  <!-- Logo -->
+  <div class="logo-top">
+    <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo">
+  </div>
+
+  <div class="login-box">
+    <h2>Login Suporte DINFO</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form action="{{ url_for('login_instrutor') }}" method="POST" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+      <input type="text" name="usuario" placeholder="Usuário" required>
+      <input type="password" name="senha" placeholder="Senha" required>
+      <button type="submit">Entrar</button>
+      <a href="/" class="btn-voltar">⬅ Voltar</a>
     </form>
   </div>
 </body>

@@ -1,100 +1,134 @@
+
+# from models.resultado import Resultado
+# import os
+# from sqlalchemy import create_engine
+# from sqlalchemy import text
+
+
+
+# def init_db():    
+#     pass
+
+# def get_db_connection():
+#     DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
+#     DB_USER = os.getenv("DB_USER", "root")
+#     DB_PASS = os.getenv("DB_PASS", "")
+#     DB_NAME = os.getenv("DB_NAME", "suporte_ti_DINFO")
+#     DB_PORT = os.getenv("DB_PORT", "3306")
+
+#     engine = create_engine(
+#         f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}",
+#         echo=False,
+#         pool_pre_ping=True,
+#         future=True
+#     )
+#     return engine
+
+
+# def get_student(re_val: str):
+#     conn = get_db_connection()
+#     c = conn.cursor()
+#     c.execute("SELECT nome, pelotao, curso FROM students WHERE re = %s", (re_val,))
+#     row = c.fetchone()
+#     conn.close()
+#     return row
+
+
+
+# def save_result(atividade: str, resultado: Resultado):
+#     engine = get_db_connection()
+#     data = resultado.as_dict()
+#     data['atividade'] = atividade
+
+#     sql = text('''
+#         REPLACE INTO results (
+#             atividade, protocolo, re, nome, pelotao, curso,
+#             data_oc, relato_policial, complemento_oc,
+#             nome_geracao, info_protocolo, status,
+#             nota, codigo_fechamento, origem_abertura_oc,
+#             envolvido, tipo_envolvimento, comandante_guarnicao,
+#             objetos, tipo_situacao, veiculos, tipo_veiculos,
+#             armas, tipo_armas, drogas, tipo_drogas,
+#             natureza, erro_coleta_dados, erros_avaliacao
+#         ) VALUES (
+#             :atividade, :protocolo, :re, :nome, :pelotao, :curso,
+#             :data_oc, :relato_policial, :complemento_oc,
+#             :nome_geracao, :info_protocolo, :status,
+#             :nota, :codigo_fechamento, :origem_abertura_oc,
+#             :envolvido, :tipo_envolvimento, :comandante_guarnicao,
+#             :objetos, :tipo_situacao, :veiculos, :tipo_veiculos,
+#             :armas, :tipo_armas, :drogas, :tipo_drogas,
+#             :natureza, :erro_coleta_dados, :erros_avaliacao
+#         )
+#     ''')
+
+#     with engine.begin() as conn:
+#         conn.execute(sql, data)
+
+
+## Teste - caso funcione tem que ajustar o código da aplicação
 import os
-import sqlite3
-import csv
-from config.settings import DB_PATH
+from sqlalchemy import create_engine, text
 from models.resultado import Resultado
 
+import os
+from sqlalchemy import create_engine, text
+from models.resultado import Resultado
 
-def get_connection():
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-    return sqlite3.connect(DB_PATH)
+# Configurações Banco Principal
+DB_HOST_MAIN = os.getenv("DB_HOST", "127.0.0.1")
+DB_USER_MAIN = os.getenv("DB_USER", "root")
+DB_PASS_MAIN = os.getenv("DB_PASS", "")
+DB_NAME_MAIN = os.getenv("DB_NAME_MAIN", "suporte_ti_DINFO")
+DB_PORT_MAIN = os.getenv("DB_PORT", "3306")
 
+# Configuração Banco Externo (simulação do avião)
+DB_HOST_EXT = os.getenv("DB_HOST_EXT", "127.0.0.1")
+DB_USER_EXT = os.getenv("DB_USER_EXT", "usuariofull")
+DB_PASS_EXT = os.getenv("DB_PASS_EXT", "SenhaForte123!")
+DB_NAME_EXT = os.getenv("DB_NAME_EXTERN", "db_externo")
+DB_PORT_EXT = os.getenv("DB_PORT_EXT", "3306")
 
-def init_db():
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS students (
-            re TEXT PRIMARY KEY,
-            nome TEXT,
-            pelotao TEXT,
-            curso TEXT
-        )
-    ''')
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS results (
-            atividade TEXT,
-            protocolo TEXT,
-            re TEXT,
-            nome TEXT,
-            pelotao TEXT,
-            curso TEXT, 
-            data_oc TEXT,
-            relato_policial TEXT,
-            complemento_oc TEXT,
-            nome_geracao TEXT,
-            info_protocolo TEXT,
-            status TEXT,
-            nota REAL,
-            codigo_fechamento TEXT,
-            origem_abertura_oc TEXT,
-            envolvido TEXT,
-            tipo_envolvimento TEXT,
-            comandante_guarnicao TEXT,
-            objetos TEXT,
-            tipo_situacao TEXT,
-            veiculos TEXT,
-            tipo_veiculos TEXT,
-            armas TEXT,
-            tipo_armas TEXT,
-            drogas TEXT,
-            tipo_drogas TEXT,
-            natureza TEXT,
-            erro_coleta_dados TEXT,
-            erros_avaliacao TEXT,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (protocolo, re, atividade)
-        )
-    ''')
-    conn.commit()
-    conn.close()
+# Criar engines
+engine_main = create_engine(
+    f"mysql+pymysql://{DB_USER_MAIN}:{DB_PASS_MAIN}@{DB_HOST_MAIN}:{DB_PORT_MAIN}/{DB_NAME_MAIN}",
+    echo=False,
+    pool_pre_ping=True,
+    future=True
+)
 
+engine_extern = create_engine(
+    f"mysql+pymysql://{DB_USER_EXT}:{DB_PASS_EXT}@{DB_HOST_EXT}:{DB_PORT_EXT}/{DB_NAME_EXT}",
+    echo=False,
+    pool_pre_ping=True,
+    future=True
+)
 
+# Funções de acesso
+def get_engine_extern():
+    return engine_extern
 
-def load_reference_from_csv(csv_path: str):
-    init_db()
-    conn = get_connection()
-    c = conn.cursor()
-    with open(csv_path, newline='', encoding='latin-1') as f:
-        reader = csv.DictReader(f, delimiter=';', skipinitialspace=True)
-        for row in reader:
-            c.execute(
-                "INSERT OR REPLACE INTO students (re, nome, pelotao, curso) VALUES (?, ?, ?, ?)",
-                (row['re'], row['nome'], row.get('pelotao', ''), row.get('curso', ''))
-            )
-    conn.commit()
-    conn.close()
-
-
+def get_db_connection(main=True):
+    """Retorna engine do banco principal (main=True) ou externo (main=False)."""
+    return engine_main if main else engine_extern
 
 def get_student(re_val: str):
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("SELECT nome, pelotao, curso FROM students WHERE re = ?", (re_val,))
-    row = c.fetchone()
-    conn.close()
+    engine = get_db_connection(main=True)  # usa banco principal
+    with engine.connect() as conn:
+        row = conn.execute(
+            text("SELECT nome, pelotao, curso FROM students WHERE re = :re"),
+            {"re": re_val}
+        ).fetchone()
     return row
 
-
-
 def save_result(atividade: str, resultado: Resultado):
-    conn = get_connection()
-    c = conn.cursor()
+    engine = get_db_connection(main=True)  # sempre no principal
     data = resultado.as_dict()
     data['atividade'] = atividade
-    c.execute('''
-        INSERT OR REPLACE INTO results (
-            atividade ,protocolo, re, nome, pelotao, curso,
+
+    sql = text('''
+        REPLACE INTO results (
+            atividade, protocolo, re, nome, pelotao, curso,
             data_oc, relato_policial, complemento_oc,
             nome_geracao, info_protocolo, status,
             nota, codigo_fechamento, origem_abertura_oc,
@@ -102,17 +136,17 @@ def save_result(atividade: str, resultado: Resultado):
             objetos, tipo_situacao, veiculos, tipo_veiculos,
             armas, tipo_armas, drogas, tipo_drogas,
             natureza, erro_coleta_dados, erros_avaliacao
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (
-        data.get('atividade'), data.get('protocolo'), data.get('re'), data.get('nome'), data.get('pelotao'), data.get('curso'),
-        data.get('data_oc'), data.get('relato_policial'), data.get('complemento_oc'),
-        data.get('nome_geracao'), data.get('info_protocolo'), data.get('status'),
-        data.get('nota'), data.get('codigo_fechamento'), data.get('origem_abertura_oc'),
-        data.get('envolvido'), data.get('tipo_envolvimento'), data.get('comandante_guarnicao'),
-        data.get('objetos'), data.get('tipo_situacao'), data.get('veiculos'),
-        data.get('tipo_veiculos'), data.get('armas'), data.get('tipo_armas'),
-        data.get('drogas'), data.get('tipo_drogas'), data.get('natureza'),
-        data.get('erro_coleta_dados'), data.get('erros_avaliacao')
-    ))
-    conn.commit()
-    conn.close()
+        ) VALUES (
+            :atividade, :protocolo, :re, :nome, :pelotao, :curso,
+            :data_oc, :relato_policial, :complemento_oc,
+            :nome_geracao, :info_protocolo, :status,
+            :nota, :codigo_fechamento, :origem_abertura_oc,
+            :envolvido, :tipo_envolvimento, :comandante_guarnicao,
+            :objetos, :tipo_situacao, :veiculos, :tipo_veiculos,
+            :armas, :tipo_armas, :drogas, :tipo_drogas,
+            :natureza, :erro_coleta_dados, :erros_avaliacao
+        )
+    ''')
+
+    with engine.begin() as conn:
+        conn.execute(sql, data)

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Status do Cadastro</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      padding: 20px;
+    }
+
+    .status-box {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 600px;
+      margin: auto;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #1e88e5;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      padding: 10px;
+      margin: 6px 0;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    /* Cores conforme o conteúdo */
+    li.ok {
+      background: #e6f7e6;
+      border-left: 5px solid #1a7e1a;
+      color: #1a7e1a;
+    }
+
+    li.erro {
+      background: #fdecea;
+      border-left: 5px solid #d93025;
+      color: #d93025;
+    }
+
+    li.info {
+      background: #e8f0fe;
+      border-left: 5px solid #1967d2;
+      color: #1967d2;
+    }
+
+    .btn-voltar {
+      display: block;
+      margin: 20px auto 0;
+      padding: 10px 16px;
+      background: #1e88e5;
+      color: #fff;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+      text-align: center;
+      width: fit-content;
+    }
+
+    .btn-voltar:hover {
+      background: #1565c0;
+    }
+  </style>
+</head>
+<body>
+  <div class="status-box">
+    <h2>Processo de Cadastro</h2>
+    <ul>
+      {% for msg in status_msgs %}
+        {% if "✅" in msg %}
+          <li class="ok">{{ msg }}</li>
+        {% elif "❌" in msg %}
+          <li class="erro">{{ msg }}</li>
+        {% else %}
+          <li class="info">{{ msg }}</li>
+        {% endif %}
+      {% endfor %}
+    </ul>
+
+    <a href="{{ url_for('siseg_cadastro_efetivo') }}" class="btn-voltar">↩ Voltar</a>
+  </div>
+</body>
+</html>
+

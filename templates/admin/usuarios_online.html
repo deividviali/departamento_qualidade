@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Usuários Online</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      background: #1e88e5;
+      color: #fff;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    .btn {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+      font-size: 0.9em;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-danger { background: #e53935; }
+    .btn-danger:hover { background: #c62828; }
+    .btn-warning { background: #fbc02d; color: black; }
+    .btn-warning:hover { background: #f9a825; }
+    .btn-info { background: #29b6f6; }
+    .btn-info:hover { background: #0288d1; }
+    .btn-secondary { background: #6c757d; }
+    .btn-secondary:hover { background: #5a6268; }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background: #1e88e5;
+      color: white;
+    }
+    td form {
+      margin: 0;
+    }
+    td button {
+      padding: 5px 10px;
+      font-size: 0.8em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Usuários Online ({{ total }})</h2>
+
+    <div class="top-bar">
+      <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">⬅️ Voltar</a>
+      <div class="actions">
+        <form method="post" action="{{ url_for('admin.logout_usuarios_online', tipo='todos') }}">
+          <button class="btn btn-danger">Deslogar Todos</button>
+        </form>
+        <form method="post" action="{{ url_for('admin.logout_usuarios_online', tipo='alunos') }}">
+          <button class="btn btn-warning">Deslogar Alunos</button>
+        </form>
+        <form method="post" action="{{ url_for('admin.logout_usuarios_online', tipo='sistema') }}">
+          <button class="btn btn-info">Deslogar Sistema</button>
+        </form>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>User ID</th>
+          <th>Tipo</th>
+          <th>Nome</th>
+          <th>Início</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in usuarios %}
+        <tr>
+          <td>{{ u.user_id }}</td>
+          <td>{{ u.user_type }}</td>
+          <td>{{ u.nome }}</td>
+          <td>{{ u.inicio }}</td>
+          <td>
+            <form method="post" action="{{ url_for('admin.logout_usuario_individual', session_id=u.id) }}">
+              <button class="btn btn-danger btn-sm">Deslogar</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

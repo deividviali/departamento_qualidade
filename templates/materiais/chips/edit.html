@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Editar Chip Telefônico</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f9; padding: 20px; }
+    .form-container { background: #fff; padding: 20px; border-radius: 8px; max-width: 600px; margin: auto; }
+    h2 { background: #1e88e5; color: white; padding: 10px; border-radius: 6px; text-align: center; }
+    label { display: block; margin-top: 10px; }
+    input, select, textarea { width: 100%; padding: 8px; margin-top: 4px; border: 1px solid #ccc; border-radius: 5px; }
+    button { margin-top: 15px; padding: 10px; background: #1e88e5; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #1565c0; }
+    a { display: inline-block; margin-top: 10px; text-decoration: none; color: #1e88e5; }
+  </style>
+</head>
+<body>
+
+  <div class="form-container">
+    <h2>✏️ Editar Chip Telefônico</h2>
+
+    <form method="post">
+      <label for="unidade_id">Unidade</label>
+      <select name="unidade_id" id="unidade_id" required>
+        {% for u in unidades %}
+          <option value="{{ u.id }}" {% if chip.unidade_id == u.id %}selected{% endif %}>{{ u.nome }}</option>
+        {% endfor %}
+      </select>
+
+      <label for="numero_chip">Número do Chip</label>
+      <input type="text" name="numero_chip" id="numero_chip" value="{{ chip.numero_chip }}" required>
+
+      <label for="numero_processo">Nº do Processo SEI</label>
+      <input type="text" name="numero_processo" id="numero_processo" value="{{ chip.numero_processo or '' }}">
+
+      <label for="observacao">Observação</label>
+      <textarea name="observacao" id="observacao">{{ chip.observacao or '' }}</textarea>
+
+      <button type="submit">Salvar Alterações</button>
+    </form>
+
+    <a href="{{ url_for('materiais_chips') }}">⬅ Voltar</a>
+  </div>
+
+  <script>
+  // Máscara telefone
+    document.getElementById("numero_chip").addEventListener("input", function (e) {
+        let v = e.target.value.replace(/\D/g, "");
+        if (v.length > 11) v = v.slice(0, 11);
+
+        if (v.length <= 10) {
+        e.target.value = v.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
+        } else {
+        e.target.value = v.replace(/(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3");
+        }
+    });
+
+    // Máscara processo
+    document.getElementById("numero_processo").addEventListener("input", function (e) {
+        let v = e.target.value.replace(/\D/g, "");
+        if (v.length > 16) v = v.slice(0, 16);
+
+        e.target.value = v.replace(/(\d{4})(\d{6})(\d{4})(\d{0,2})/, "$1.$2/$3-$4");
+    });
+    </script>
+
+</body>
+</html>

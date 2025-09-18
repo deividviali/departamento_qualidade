@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Auditoria</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      background: #1e88e5;
+      color: #fff;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+      font-size: 0.9em;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-secondary { background: #6c757d; }
+    .btn-secondary:hover { background: #5a6268; }
+    .btn-primary { background: #1e88e5; }
+    .btn-primary:hover { background: #1565c0; }
+
+    .filters {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 15px;
+      justify-content: center;
+    }
+
+    .filters input {
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 0.9em;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background: #1e88e5;
+      color: white;
+    }
+
+    .no-results {
+      color: #777;
+      text-align: center;
+      margin-top: 20px;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Auditoria</h2>
+
+    <div class="top-bar">
+      <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">⬅️ Voltar</a>
+    </div>
+
+    <!-- 🔍 Filtros -->
+    <form method="get" action="{{ url_for('admin.auditoria') }}">
+      <div class="filters">
+        <input type="text" name="user_id" placeholder="Matrícula" value="{{ request.args.get('user_id','') }}">
+        <input type="text" name="nome" placeholder="Nome" value="{{ request.args.get('nome','') }}">
+        <label>De:</label>
+        <input type="date" name="data_inicio" value="{{ request.args.get('data_inicio','') }}">
+        <label>Até:</label>
+        <input type="date" name="data_fim" value="{{ request.args.get('data_fim','') }}">
+        <button type="submit" class="btn btn-primary">🔍 Buscar</button>
+      </div>
+    </form>
+
+    <!-- 📋 Resultados -->
+    {% if logs and logs|length > 0 %}
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>User ID</th>
+          <th>Nome</th>
+          <th>Tipo</th>
+          <th>Ação</th>
+          <th>Detalhes</th>
+          <th>Data/Hora</th>
+          <th>IP</th>
+        </tr>
+      </thead>
+      <tbody>        
+        {% for log in logs %}
+        <tr>
+          <td>{{ log.id }}</td>
+          <td>{{ log.user_id }}</td>
+          <td>{{ log.nome }}</td>
+          <td>{{ log.user_type }}</td>
+          <td>{{ log.acao }}</td>
+          <td>{{ log.detalhes }}</td>
+          <td>{{ log.data_hora }}</td>
+          <td>{{ log.ip_address }}</td>
+        </tr>
+        {% endfor %}    
+      </tbody>      
+    </table>
+    {% elif request.args %}
+      <p class="no-results">⚠️ Nenhum registro encontrado.</p>
+    {% endif %}
+    <!-- 🔹 Paginação -->
+      <div style="text-align:center; margin-top:15px;">
+        {% if page > 1 %}
+          <a href="{{ url_for('admin.auditoria', page=page-1, user_id=request.args.get('user_id',''), nome=request.args.get('nome',''), data_inicio=request.args.get('data_inicio',''), data_fim=request.args.get('data_fim','')) }}" class="btn btn-edit">⬅️ Anterior</a>
+        {% endif %}
+        <span>Página {{ page }} de {{ total_pages }}</span>
+        {% if page < total_pages %}
+          <a href="{{ url_for('admin.auditoria', page=page+1, user_id=request.args.get('user_id',''), nome=request.args.get('nome',''), data_inicio=request.args.get('data_inicio',''), data_fim=request.args.get('data_fim','')) }}" class="btn btn-edit">Próxima ➡️</a>
+        {% endif %}
+      </div>
+  </div>
+</body>
+</html>

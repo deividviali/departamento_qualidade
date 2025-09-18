@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Adicionar Aluno Manualmente</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f9; margin: 0; padding: 0; }
+    header { background: #43a047; color: white; padding: 15px; text-align: center; font-size: 1.5em; }
+    .container { max-width: 600px; margin: 20px auto; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    h2 { text-align: center; margin-bottom: 20px; }
+    form { display: flex; flex-direction: column; gap: 15px; }
+    input { padding: 8px; border: 1px solid #ccc; border-radius: 5px; }
+    input[name="re"] { ime-mode: disabled; }
+    button { background: #43a047; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #2e7d32; }
+    .back { display: inline-block; margin-top: 15px; background: #757575; color: white; padding: 8px 15px; border-radius: 5px; text-decoration: none; }
+    .back:hover { background: #424242; }
+
+    /* Mensasem sistema */
+    #flash-messages {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+    }
+
+    .toast {
+      background: #333;
+      color: #fff;
+      padding: 12px 20px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      opacity: 0;
+      transform: translateX(100%);
+      animation: slideIn 0.5s forwards, fadeOut 0.5s 2.5s forwards;
+    }
+
+    .toast.success { background: #4caf50; }   /* Verde */
+    .toast.error   { background: #e53935; }   /* Vermelho */
+    .toast.info    { background: #2196f3; }   /* Azul */
+
+    @keyframes slideIn {
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes fadeOut {
+      to {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <header>Adicionar Aluno</header>
+  <div class="container">
+    <h2>Cadastro Manual</h2>
+    <form method="POST">
+      <input type="number" name="re" placeholder="RE (somente números)" required>
+      <input type="text" name="nome" placeholder="Nome Completo" required>
+      <input type="text" name="pelotao" placeholder="Pelotão" required>
+      <input type="text" name="curso" placeholder="Curso" required>
+      <button type="submit">💾 Salvar</button>
+    </form>
+    <a href="{{ url_for('admin.index') }}" class="back">⬅ Voltar</a>
+  </div>
+</body>
+
+<!-- Mensagem sistema  -->
+<div id="flash-messages">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="toast {{ category }}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</div>
+<script>
+  setTimeout(() => {
+    document.querySelectorAll('.toast').forEach(el => el.remove());
+  }, 3000); // 3 segundos
+</script>
+
+
+</html>

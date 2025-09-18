@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Selecionar Perfil</title>
+  <style>
+    body {
+      background-color: #f5f5f5;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .perfil-box {
+      background: #fff;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 300px;
+    }
+
+    .perfil-box h2 {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .perfil-box select,
+    .perfil-box button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .perfil-box button {
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .perfil-box button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <div class="perfil-box">
+    <h2>Selecione seu Perfil</h2>
+    <form method="POST" action="{{ url_for('escolher_perfil') }}">
+      <select name="perfil" required>
+        {% for perfil in perfis %}
+          <option value="{{ perfil }}">{{ perfil }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">Entrar</button>
+    </form>
+  </div>
+</body>
+</html>

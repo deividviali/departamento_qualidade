@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Consultar Alunos</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    h2 {
+      background: #1e88e5;
+      color: #fff;
+      padding: 14px;
+      border-radius: 8px;
+      text-align: center;
+      margin-bottom: 25px;
+      font-size: 1.3em;
+    }
+
+    .top-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 15px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.95em;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.3s ease;
+    }
+
+    .btn i {
+      font-size: 1em;
+    }
+
+    .btn-primary {
+      background: #1e88e5;
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: #1565c0;
+    }
+
+    .btn-secondary {
+      background: #9e9e9e;
+      color: #fff;
+    }
+    .btn-secondary:hover {
+      background: #757575;
+    }
+
+    .btn-edit {
+      background: #1e88e5;
+      color: #fff;
+    }
+    .btn-edit:hover {
+      background: #1565c0;
+    }
+
+    .btn-delete {
+      background: #e53935;
+      color: #fff;
+    }
+    .btn-delete:hover {
+      background: #c62828;
+    }
+
+    .filters {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .filters input, .filters select {
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 0.9em;
+      width: 200px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background: #1e88e5;
+      color: white;
+    }
+
+    .no-results {
+      color: #777;
+      text-align: center;
+      margin-top: 20px;
+      font-style: italic;
+    }
+  </style>
+  <!-- Ícones Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+  <div class="container">
+    <h2><i class="fa-solid fa-users"></i> Consultar Alunos</h2>
+
+    <!-- Botão voltar -->
+    <div class="top-actions">
+      <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">
+        <i class="fa-solid fa-arrow-left"></i> Voltar
+      </a>
+    </div>
+
+    <!-- 🔍 Filtros -->
+    <form method="get" action="{{ url_for('admin.consultar_alunos') }}">
+      <div class="filters">
+        <input type="text" name="re" placeholder="RE" value="{{ request.args.get('re', '') }}">
+        <input type="text" name="nome" placeholder="Nome" value="{{ request.args.get('nome', '') }}">
+        <select name="pelotao">
+          <option value="">-- Pelotão --</option>
+          {% for p in pelotoes %}
+            <option value="{{ p }}" {% if request.args.get('pelotao') == p %}selected{% endif %}>{{ p }}</option>
+          {% endfor %}
+        </select>
+        <select name="curso">
+          <option value="">-- Curso --</option>
+          {% for c in cursos %}
+            <option value="{{ c }}" {% if request.args.get('curso') == c %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-primary">
+          <i class="fa-solid fa-magnifying-glass"></i> Buscar
+        </button>
+      </div>
+    </form>
+
+    <!-- 📋 Resultados -->
+    {% if alunos %}
+      <table>
+        <thead>
+          <tr>
+            <th>RE</th>
+            <th>Nome</th>
+            <th>Pelotão</th>
+            <th>Curso</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for aluno in alunos %}
+          <tr>
+            <td>{{ aluno.re }}</td>
+            <td>{{ aluno.nome }}</td>
+            <td>{{ aluno.pelotao }}</td>
+            <td>{{ aluno.curso }}</td>
+            <td>
+              <a href="{{ url_for('admin.edit_aluno', re=aluno.re) }}" class="btn btn-edit">✏️ Editar</a>
+              <form method="post" action="{{ url_for('admin.delete_aluno', re=aluno.re) }}" style="display:inline">
+                <button type="submit" class="btn btn-delete" onclick="return confirm('Excluir aluno?')">❌ Excluir</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <!-- 🔹 Navegação da paginação -->
+      <div style="text-align:center; margin-top:15px;">
+        {% if page > 1 %}
+          <a href="{{ url_for('admin.consultar_alunos', page=page-1, re=request.args.get('re',''), nome=request.args.get('nome',''), pelotao=request.args.get('pelotao',''), curso=request.args.get('curso','')) }}" class="btn btn-edit">⬅️ Anterior</a>
+        {% endif %}
+        <span>Página {{ page }} de {{ total_pages }}</span>
+        {% if page < total_pages %}
+          <a href="{{ url_for('admin.consultar_alunos', page=page+1, re=request.args.get('re',''), nome=request.args.get('nome',''), pelotao=request.args.get('pelotao',''), curso=request.args.get('curso','')) }}" class="btn btn-edit">Próxima ➡️</a>
+        {% endif %}
+  </div>
+
+{% elif request.args %}
+  <p class="no-results"><i class="fa-solid fa-circle-exclamation"></i> Nenhum aluno encontrado.</p>
+{% endif %}
+
+  </div>
+
+</body>
+</html>

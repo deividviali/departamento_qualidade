@@ -1,0 +1,146 @@
+<!-- <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Novo Cadastro Efetivo - SISEG</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f9; padding: 20px; }
+    .form-container { background: #fff; padding: 20px; border-radius: 8px; max-width: 600px; margin: auto; }
+    h2 { background: #1e88e5; color: white; padding: 10px; border-radius: 6px; text-align: center; }
+    label { display: block; margin-top: 10px; }
+    input, select { width: 100%; padding: 8px; margin-top: 4px; border: 1px solid #ccc; border-radius: 5px; }
+    textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; min-height: 60px; }
+    button { margin-top: 15px; padding: 10px; background: #1e88e5; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #1565c0; }
+    a { display: inline-block; margin-top: 10px; text-decoration: none; color: #1e88e5; }
+    .hint { font-size: 0.9em; color: #555; }
+  </style>
+</head>
+<body>
+
+  <div class="form-container">
+    <h2>📋 Novo Cadastro Efetivo - SISEG</h2>
+
+    <form method="post">
+      <label for="matriculas">Matrícula(s)</label>
+      <input type="text" name="matriculas" id="matriculas" placeholder="12345; 67890; 11223" required>
+      <div class="hint">Digite uma ou mais matrículas separadas por ponto e vírgula (;)</div>            
+
+      <button type="submit">Inciciar Verificação</button>
+    </form>
+
+    <a href="{{ url_for('siseg_index') }}">⬅ Voltar</a>
+  </div>
+
+</body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Novo Cadastro Efetivo - SISEG</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f9;
+      padding: 0;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .form-container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 800px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      background: #1e88e5;
+      color: white;
+      padding: 12px;
+      border-radius: 6px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+      color: #555; /* cinza */
+      font-size: 1rem;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      resize: vertical; /* permite puxar para baixo */
+      min-height: 60px;
+      font-family: Arial, sans-serif;
+    }
+
+    .hint {
+      font-size: 0.9em;
+      color: #555;
+      margin-top: 4px;
+    }
+
+    .btn-container {
+      display: flex;
+      justify-content: center;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 12px 20px;
+      background: #1e88e5;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    button:hover {
+      background: #1565c0;
+    }
+    
+    a {
+      display: inline-block;
+      margin-top: 15px;
+      text-decoration: none;
+      color: #111111;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="form-container">
+    <h2>📋 CADASTRO/ATUALIZAÇÃO EFETIVO SISEG_PRODUÇÃO</h2>
+
+    <form method="post">
+      <label for="matriculas">MATRÍCULAS</label>
+      <textarea name="matriculas" id="matriculas" placeholder="100091541; 100092541" required></textarea>
+      <div class="hint">Digite uma ou mais matrículas separadas por ponto e vírgula (;)</div>            
+
+      <div class="btn-container">
+        <button type="submit">INICIAR CADASTRO/ATUALIZAÇÃO EFETIVO SISEG</button>
+      </div>
+    </form>
+
+    <a href="{{ url_for('siseg_index') }}">⬅ VOLTAR</a>
+  </div>
+
+</body>
+</html>

@@ -7,99 +7,126 @@
     body {
       margin: 0;
       padding: 0;
-      background-color: #e0e0e0;
       font-family: Arial, sans-serif;
+      height: 100vh;
+      background-color: #444; /* fundo cinza */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      color: #333;
+    }
+
+    .logo-top {
+      margin-top: 20px;
+      margin-bottom: 30px;
+    }
+
+    .logo-top img {
+      max-width: 220px;
+      height: auto;
+      display: block;
     }
 
     .container {
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      height: 100vh;
-      position: relative;
+      gap: 20px; /* menos espaço entre quadrantes */
+      width: 100%;
+      max-width: 420px;
     }
 
-    h1 {
-      margin-bottom: 40px;
+    .card {
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      text-align: center;
+      background: #fff;
+    }
+
+    .card.admin {
+      background: #f5f5f5;
+    }
+
+    h1, h2 {
+      margin-bottom: 20px;
+      color: #1e88e5;
+      font-size: 20px;
     }
 
     form {
       display: flex;
       flex-direction: column;
       align-items: center;
+      width: 100%;
     }
 
     label {
       font-weight: bold;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
+      text-align: center;
+      width: 100%;
     }
 
-    input[type="text"] {
-      padding: 10px;
-      width: 200px;
-      margin-bottom: 20px;
+    input[type="number"] {
+      padding: 8px;
+      width: 90%;
+      margin-bottom: 20px; 
       border-radius: 5px;
       border: 1px solid #999;
+      text-align: center;
+      font-size: 14px;
     }
 
-    button[type="submit"] {
-      padding: 10px 20px;
+    button[type="submit"],
+    .btn {
+      padding: 8px 16px; 
       background-color: #1e88e5;
       color: white;
       border: none;
       border-radius: 5px;
       font-weight: bold;
       cursor: pointer;
-    }
-
-    .instrutor-btn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background-color: #4caf50;
-      color: white;
-      padding: 8px 12px;
-      border-radius: 5px;
       text-decoration: none;
+      display: inline-block;
+      width: 90%; /* 🔹 menor que antes para harmonizar */
       font-size: 14px;
-      display: inline-block;  
-      cursor: pointer;    
-      z-index: 1000;
-      pointer-events: auto; 
     }
 
-    .bottom-icon {
-      position: absolute;
-      bottom: 10px;
-      width: 120px;
-      height: 120px;
+    button[type="submit"]:hover,
+    .btn:hover {
+      background-color: #1565c0;
     }
   </style>
 </head>
 <body>  
-  <a href="/login_instrutor" class="instrutor-btn">Acesso Instrutor</a>
+
+  <!-- Logo superior -->
+  <div class="logo-top">
+    <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo">
+  </div>
 
   <div class="container">
-    <h1>Login_CFS2025</h1>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <ul>
-        {% for category, msg in messages %}
-          <li class="{{ category }}">{{ msg }}</li>
-        {% endfor %}
-        </ul>
-      {% endif %}
-    {% endwith %}
+    <!-- Quadrante Login Correção -->
+    <div class="card">
+      <h1>LOGIN CORREÇÃO DE ATIVIDADES</h1>
+      <form method="post">
+        <label for="re">Matrícula</label>
+        <input type="number" id="re" name="re" required>
+        <button type="submit">Acessar</button>
+      </form>
+    </div>
 
-    <form method="post">
-      <label for="re">Matrícula:</label>
-      <input type="text" id="re" name="re" required>
-      <button type="submit">Entrar</button>
-    </form>
-    
-    <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Ícone" class="bottom-icon">
+    <!-- Quadrante Administrador -->
+    <div class="card admin">
+      <h2>ADMINISTRADOR SUPORTE DINFO</h2>
+      <a href="/login_instrutor" class="btn">Acessar</a>
+    </div>
+
   </div>
+
 </body>
 </html>

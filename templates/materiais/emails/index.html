@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestão de E-mails</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f9; }
+    header { background: #1e88e5; color: white; padding: 15px; text-align: center; font-weight: bold; }
+    .container { padding: 20px; }
+    a.btn, button.btn {
+      background: #1e88e5;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 5px;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+    }
+    a.btn:hover, button.btn:hover { background: #1565c0; }
+    button.btn.danger { background: #e53935; }
+    button.btn.danger:hover { background: #c62828; }
+    table { width: 100%; border-collapse: collapse; background: white; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    th { background: #1e88e5; color: white; }
+    .filters {
+      margin-top: 15px;
+      padding: 10px;
+      background: #fff;
+      border-radius: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .filters input, .filters select {
+      padding: 6px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>Gestão de E-mails</header>
+
+  <div class="container">
+    <!-- Botões de ação -->
+    <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap;">
+      <a href="{{ url_for('materiais_emails_create') }}" class="btn">➕ Cadastrar E-mail</a>
+      <a href="{{ url_for('suporte') }}" class="btn">⬅ Voltar</a>
+    </div>
+
+    <!-- Filtros -->
+    <form method="get" class="filters">
+      <select name="unidade_id">
+        <option value="">-- Todas as Unidades --</option>
+        {% for u in unidades %}
+          <option value="{{ u.id }}" {% if request.args.get('unidade_id') == u.id|string %}selected{% endif %}>{{ u.nome }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="tipo_id">
+        <option value="">-- Todos os Tipos --</option>
+        {% for t in tipos %}
+          <option value="{{ t.id }}" {% if request.args.get('tipo_id') == t.id|string %}selected{% endif %}>{{ t.nome }}</option>
+        {% endfor %}
+      </select>
+
+      <input type="text" name="email" placeholder="Buscar e-mail" value="{{ request.args.get('email','') }}">
+      <input type="text" name="responsavel" placeholder="Buscar responsável" value="{{ request.args.get('responsavel','') }}">
+      <input type="text" name="cpf" placeholder="Buscar CPF" value="{{ request.args.get('cpf','') }}">
+
+      <button type="submit" class="btn">🔍 Filtrar</button>
+      <a href="{{ url_for('materiais_emails') }}" class="btn">⟳ Limpar</a>
+    </form>
+
+    <!-- Tabela -->
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Unidade</th>
+          <th>Tipo</th>
+          <th>E-mail</th>
+          <th>Responsável</th>
+          <th>CPF</th>
+          <th>Nº Processo SEI/GLPI</th>
+          <th>Data Cadastro</th>
+          <th>Observação</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in emails %}
+        <tr>
+          <td>{{ e.id }}</td>
+          <td>{{ e.unidade }}</td>
+          <td>{{ e.tipo }}</td>
+          <td>{{ e.email }}</td>
+          <td>{{ e.responsavel or '—' }}</td>
+          <td>{{ e.cpf or '—' }}</td>
+          <td>{{ e.numero_processo or '—' }}</td>
+          <td>{{ e.data_cadastro }}</td>
+          <td>{{ e.observacao or '—' }}</td>
+          <td>
+            <a href="{{ url_for('materiais_emails_edit', id=e.id) }}" class="btn">✏️ Editar</a>
+            <form method="post" action="{{ url_for('materiais_emails_delete', id=e.id) }}" style="display:inline;">
+              <button type="submit" class="btn danger" onclick="return confirm('Excluir este registro?')">❌ Excluir</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="10">Nenhum registro encontrado</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</body>
+</html>

@@ -37,10 +37,31 @@ class Resultado:
             'pelotao': self.pelotao,
             'curso': self.curso,
         }
-        base.update(self.dados)
+
         base.update({
             'nota': self.nota,
-            'erros_coleta': '; '.join(self.erros_coleta),
-            'erros_avaliacao': '; '.join(self.erros_avaliacao)
+            'status': 'certo' if self.nota == 1 else 'errado',
+            'erro_coleta_dados': '; '.join(self.erros_coleta),
+            'erros_avaliacao': '; '.join(self.erros_avaliacao),
+            'objetos': self.dados.get('objetos', ''),
+            'tipo_situacao': self.dados.get('tipo_situacao', ''),
+            'veiculos': self.dados.get('veiculos', ''),
+            'tipo_veiculos': self.dados.get('tipo_veiculos', ''),
+            'armas': self.dados.get('armas', ''),
+            'tipo_armas': self.dados.get('tipo_armas', ''),
+            'drogas': self.dados.get('drogas', ''),
+            'tipo_drogas': self.dados.get('tipo_drogas', ''),
+            'natureza': self.dados.get('natureza', ''),
+            'data_oc': self.dados.get('data_oc', ''),
+            'relato_policial': self.dados.get('relato_policial', ''),
+            'complemento_oc': self.dados.get('complemento_oc', ''),
+            'nome_geracao': self.dados.get('nome_geracao', ''),
+            'info_protocolo': self.dados.get('info_protocolo', ''),
+            'codigo_fechamento': self.dados.get('codigo_fechamento', ''),
+            'origem_abertura_oc': self.dados.get('origem_abertura_oc', ''),
+            'envolvido': self.dados.get('envolvido', ''),
+            'tipo_envolvimento': self.dados.get('tipo_envolvimento', ''),
+            'comandante_guarnicao': self.dados.get('comandante_guarnicao', ''),
         })
+
         return base

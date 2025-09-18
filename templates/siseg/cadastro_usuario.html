@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Novo Cadastro Efetivo - SISEG</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f9; padding: 20px; }
+    .form-container { background: #fff; padding: 20px; border-radius: 8px; max-width: 600px; margin: auto; }
+    h2 { background: #1e88e5; color: white; padding: 10px; border-radius: 6px; text-align: center; }
+    label { display: block; margin-top: 10px; }
+    input, select { width: 100%; padding: 8px; margin-top: 4px; border: 1px solid #ccc; border-radius: 5px; }
+    textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; min-height: 60px; }
+    button { margin-top: 15px; padding: 10px; background: #1e88e5; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #1565c0; }
+    a { display: inline-block; margin-top: 10px; text-decoration: none; color: #1e88e5; }
+    .hint { font-size: 0.9em; color: #555; }
+  </style>
+</head>
+<body>
+
+  <div class="form-container">
+    <h2>📋 Novo Cadastro Efetivo - SISEG</h2>
+
+    <form method="post">
+      <label for="matriculas">Matrícula(s)</label>
+      <input type="text" name="matriculas" id="matriculas" placeholder="12345; 67890; 11223" required>
+      <div class="hint">Digite uma ou mais matrículas separadas por ponto e vírgula (;)</div>
+
+      <label for="perfil_id">Perfil de Acesso</label>
+      <select name="perfil_id" id="perfil_id" required>
+        <option value="">-- Selecione --</option>
+        {% for p in perfis %}
+          <option value="{{ p.id }}">{{ p.nome }}</option>
+        {% endfor %}
+      </select>
+
+      <label for="unidade_id">Unidade</label>
+      <select name="unidade_id" id="unidade_id" required>
+        <option value="">-- Selecione --</option>
+        {% for u in unidades %}
+          <option value="{{ u.id }}">{{ u.nome }}</option>
+        {% endfor %}
+      </select>
+
+      <label for="numero_glpi">Número GLPI (opcional)</label>
+      <input type="text" name="numero_glpi" id="numero_glpi">
+
+      <button type="submit">💾 Salvar</button>
+    </form>
+
+    <a href="{{ url_for('siseg_index') }}">⬅ Voltar</a>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestão de Recursos Humanos - DIP/PMRO</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f4f4f9;
+    }
+
+    header {
+      background: #1e88e5;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      font-size: 1.5em;
+      font-weight: bold;
+      position: relative;
+    }
+
+    /* Botão Logout no canto superior direito */
+    .logout-btn {
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      background: #e53935;
+      color: white;
+      padding: 8px 15px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .logout-btn:hover {
+      background: #c62828;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-gap: 20px;
+      padding: 20px;
+    }
+
+    .quadrante {
+      background: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .quadrante h4 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 1.2em;
+      color: #333;
+      text-align: center;
+      background: #e3f2fd;
+      border-radius: 8px;
+      padding: 8px;
+    }
+
+    /* Cores diferentes para cada quadrante */
+    .quadrante:nth-child(1) h4 { background: #90caf9; }
+    .quadrante:nth-child(2) h4 { background: #a5d6a7; }
+    .quadrante:nth-child(3) h4 { background: #ffcc80; }
+    .quadrante:nth-child(4) h4 { background: #ef9a9a; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background: #1e88e5;
+      color: white;
+    }
+
+    a, button {
+      padding: 6px 10px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-size: 0.9em;
+    }
+
+    a {
+      background: #1e88e5;
+      color: white;
+    }
+
+    a:hover {
+      background: #1565c0;
+    }
+
+    button {
+      border: none;
+      background: #e53935;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #c62828;
+    }
+
+    /* Ajuste dos botões de ação lado a lado */
+    .acoes {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .btn-primary { background: #1e88e5; }
+    .btn-primary:hover { background: #1565c0; }
+    .btn-danger { background: #e53935; }
+    .btn-danger:hover { background: #c62828; }
+
+  </style>
+</head>
+<body>
+
+  <header>
+    SUPORTE - DEPARTAMENTO DE QUALIDADE DA PMRO
+    <a href="{{ url_for('logout_instrutor') }}" class="logout-btn">🚪 Logout</a>
+  </header>
+
+  <div class="dashboard">
+    
+    <!-- Quadrante 1 -->
+    <div class="quadrante">
+      <h4 class="blue">Gerenciar Usuário de Sistema</h4>
+      <form method="get" action="{{ url_for('admin.buscar_usuario') }}" class="search-box">
+        <label>Matrícula:</label>
+        <input type="text" name="matricula" placeholder="Digite a matrícula">
+        <button type="submit">🔍 Buscar</button>
+        <a href="{{ url_for('admin.buscar_usuario') }}" class="btn">📋 Listar Todos</a>
+        <a href="{{ url_for('admin.create_user') }}" class="btn">➕ Novo Usuário</a>
+      </form>
+
+      {% if usuarios and usuarios|length > 0 %}
+        <table>
+          <thead>
+            <tr>
+              <th>Matrícula</th>
+              <th>Nome</th>
+              <th>Nome de Guerra</th>
+              <th>Email</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in usuarios %}
+            <tr>
+              <td>{{ u.matricula }}</td>
+              <td>{{ u.nome or '—' }}</td>
+              <td>{{ u.nome_guerra or '—' }}</td>
+              <td>{{ u.email or '—' }}</td>
+              <td>
+                <div class="acoes">
+                  <a href="{{ url_for('admin.edit_user', matricula=u.matricula) }}" class="btn btn-primary">✏️ Editar</a>
+                  <form method="post" action="{{ url_for('admin.delete_user', matricula=u.matricula) }}">
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('Excluir usuário?')">❌ Excluir</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p style="color:#777; text-align:center;">⚠️ Nenhum usuário encontrado.</p>
+      {% endif %}
+    </div>
+
+    
+    <!-- Quadrante 2 -->
+<div class="quadrante">
+  <h4>Cadastrar Alunos no Sistema</h4>
+  <p>Gerenciar os alunos cadastrados no sistema.</p>
+  
+  <div style="display:flex; flex-direction:column; gap:10px;">
+    <a href="{{ url_for('admin.consultar_alunos') }}" class="btn">🔍 Consultar Alunos</a>
+    <a href="{{ url_for('admin.create_aluno') }}" class="btn">➕ Adicionar Aluno Manualmente</a>
+    <a href="{{ url_for('admin.import_alunos_csv') }}" class="btn">📂 Importar Alunos via CSV</a>
+  </div>
+</div>
+
+
+    <!-- Quadrante 3 -->
+    <div class="quadrante">
+        <h4>Atribuir Permissão no Sistema</h4>
+        <form method="get" action="{{ url_for('admin.buscar_permissao') }}">
+            <label>Matrícula:</label>
+            <input type="text" name="matricula" placeholder="Digite a matrícula" required>
+            <button type="submit">🔍 Buscar</button>
+        </form>
+
+        {% if usuario %}
+            <table>
+            <thead>
+                <tr>
+                <th>Matrícula</th>
+                <th>Nome</th>
+                <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                <td>{{ usuario.matricula }}</td>
+                <td>{{ usuario.nome }}</td>
+                <td>
+                    <a href="{{ url_for('admin.gerenciar_permissao_usuario', matricula=usuario.matricula) }}">⚙️ Gerenciar Permissões</a>
+                </td>
+                </tr>
+            </tbody>
+            </table>
+        {% elif usuario is defined %}
+            <p style="color:red;">❌ Usuário não encontrado.</p>
+        {% endif %}
+        </div>
+
+
+    
+    <!-- Quadrante 4 -->
+    <div class="quadrante">
+        <h4>Usuários Online e Auditoria</h4>
+
+        <!-- Usuários Online -->
+        <p>Total de usuários online: <strong>{{ total_online }}</strong></p>
+        <a href="{{ url_for('admin.usuarios_online') }}" class="btn-acao">👥 Ver Detalhes</a>
+
+        <hr>
+
+        <!-- Auditoria -->
+        <p>Acessar registros de auditoria:</p>
+        <a href="{{ url_for('admin.auditoria') }}" class="btn-acao">📜 Auditoria</a>
+    </div>
+
+
+  </div>
+</div>
+
+
+
+    
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Editar Aluno</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f6f9; }
+    .container {
+      max-width: 500px;
+      margin: 50px auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    h2 {
+      text-align: center;
+      color: #1e88e5;
+      margin-bottom: 20px;
+    }
+    .form-group { margin-bottom: 15px; }
+    label { font-weight: bold; display: block; margin-bottom: 5px; }
+    input[type="text"] {
+      width: 100%; padding: 10px; border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    .btn {
+      display: inline-block;
+      background: #1e88e5;
+      color: white;
+      padding: 10px 15px;
+      text-decoration: none;
+      border-radius: 6px;
+      margin-top: 10px;
+      text-align: center;
+    }
+    .btn:hover { background: #1565c0; }
+    .btn-secondary { background: #9e9e9e; }
+    .btn-secondary:hover { background: #757575; }
+
+    /* Mensasem sistema */
+    #flash-messages {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+    }
+
+    .toast {
+      background: #333;
+      color: #fff;
+      padding: 12px 20px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      opacity: 0;
+      transform: translateX(100%);
+      animation: slideIn 0.5s forwards, fadeOut 0.5s 2.5s forwards;
+    }
+
+    .toast.success { background: #4caf50; }   /* Verde */
+    .toast.error   { background: #e53935; }   /* Vermelho */
+    .toast.info    { background: #2196f3; }   /* Azul */
+
+    @keyframes slideIn {
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes fadeOut {
+      to {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Editar Aluno</h2>
+    <form method="post">
+      <div class="form-group">
+        <label>RE</label>
+        <input type="text" name="re" value="{{ aluno.re }}" readonly>
+      </div>
+      <div class="form-group">
+        <label>Nome</label>
+        <input type="text" name="nome" value="{{ aluno.nome }}" required>
+      </div>
+      <div class="form-group">
+        <label>Pelotão</label>
+        <input type="text" name="pelotao" value="{{ aluno.pelotao }}" required>
+      </div>
+      <div class="form-group">
+        <label>Curso</label>
+        <input type="text" name="curso" value="{{ aluno.curso }}" required>
+      </div>
+      <button type="submit" class="btn">💾 Salvar</button>
+      <a href="{{ url_for('admin.consultar_alunos') }}" class="btn btn-secondary">⬅ Voltar</a>
+    </form>
+  </div>
+</body>
+<!-- Mensagem sistema  -->
+<div id="flash-messages">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="toast {{ category }}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</div>
+<script>
+  setTimeout(() => {
+    document.querySelectorAll('.toast').forEach(el => el.remove());
+  }, 3000); // 3 segundos
+</script>
+</html>

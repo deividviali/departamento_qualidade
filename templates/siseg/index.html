@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>GESTÃO SUPORTE DINFO - SISEG E SYS AIT</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f9; margin:0; padding:0; }
+    header { background: #1e88e5; color: white; padding: 15px; text-align: center; font-weight: bold; }
+    .container { padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .quadrante {
+      background: #fff; padding: 20px; border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .quadrante h4 {
+      margin-top: 0; margin-bottom: 15px;
+      font-size: 1.2em; color: #333;
+      background: #e3f2fd; border-radius: 8px; padding: 8px;
+      width: 100%; text-align: center;
+    }
+    .btn {
+      background: #1e88e5; color: white;
+      padding: 8px 12px; border-radius: 5px;
+      text-decoration: none; text-align: center;
+      margin: 5px; display: block; width: 100%;
+    }
+    .btn:hover { background: #1565c0; }
+    .extra {
+      grid-column: 1 / 3;
+      display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px;
+    }
+    a {
+      display: inline-block;
+      margin-top: 15px;
+      text-decoration: none;
+      color: #111111;
+    }
+    a.btn-voltar {
+      margin-left: 20px;
+      background: #1e88e5;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 5px;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    a.btn-voltar:hover { background: #1565c0; }
+    
+  </style>
+</head>
+<body>
+
+  <header>GESTÃO SUPORTE DINFO - SISEG E SYS AIT</header>
+  <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap;">      
+      <a href="{{ url_for('suporte') }}" class="btn-voltar">← Voltar</a>
+    </div>
+
+  <div class="container">    
+    <!-- Quadrante -->
+    <div class="quadrante">
+      <h4>AMBIENTE SISEG PRODUÇÃO</h4>
+      <a href="{{ url_for('siseg_cadastro_efetivo') }}" class="btn">📋 🔄 Cadastro/Atualização de Efetivo</a>
+      <!-- <a href="{{ url_for('siseg_atualizacao_efetivo') }}" class="btn">✏️ Atualização de Efetivo</a> -->
+      <!-- <a href="{{ url_for('siseg_cadastro_usuario') }}" class="btn">👤 Cadastro de Usuário</a>
+      <a href="{{ url_for('siseg_atualizacao_usuario') }}" class="btn">🔄 Atualização de Usuário</a> -->
+    </div>
+
+    <!-- Quadrante CZT
+    <div class="quadrante">
+      <h4>SYS AIT</h4>
+      <a href="{{ url_for('sysait_cadastro_efetivo') }}" class="btn">📋 Cadastro de Efetivo</a>
+      <a href="{{ url_for('sysait_atualizacao_efetivo') }}" class="btn">✏️ Atualização de Efetivo</a>
+      <a href="{{ url_for('sysait_cadastro_usuario') }}" class="btn">👤 Cadastro de Usuário</a>
+      <a href="{{ url_for('sysait_atualizacao_usuario') }}" class="btn">🔄 Atualização de Usuário</a>
+    </div> -->
+
+    <!-- Acessos extras -->
+    <!-- <div class="quadrante">
+      <a href="{{ url_for('glpi_home') }}" class="btn">👤 Atendimento vinculado ao GLPI</a>     
+    </div> -->
+
+    <!-- <div class="quadrante">
+      <h4>SISEG TREINAMENTO</h4>
+      <a href="{{ url_for('siseg_treinamento_cadastro_efetivo') }}" class="btn">📋 Cadastro de Efetivo</a>
+      <a href="{{ url_for('siseg_treinamento_atualizacao_efetivo') }}" class="btn">✏️ Atualização de Efetivo</a>
+      <a href="{{ url_for('siseg_treinamento_cadastro_usuario') }}" class="btn">👤 Cadastro de Usuário</a>
+      <a href="{{ url_for('siseg_treinamento_atualizacao_usuario') }}" class="btn">🔄 Atualização de Usuário</a>
+    </div> -->
+    
+  </div>  
+  
+</body>
+</html>

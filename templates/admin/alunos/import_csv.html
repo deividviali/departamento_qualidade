@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Importar Alunos via CSV</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: 50px auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      text-align: center;
+    }
+
+    h2 {
+      color: #1e88e5;
+      margin-bottom: 20px;
+      font-size: 1.4em;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    h2 i {
+      font-size: 1.4em;
+      vertical-align: middle; /* 🔥 Força alinhamento */
+      line-height: 1;
+    }
+
+    p {
+      color: #555;
+      margin-bottom: 20px;
+      font-size: 0.95em;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    .btn {
+      display: flex;              /* 🔥 Garante alinhamento */
+      align-items: center;        /* Centraliza ícone/texto */
+      justify-content: center;    /* Centraliza horizontalmente */
+      gap: 8px;                   /* Espaço entre ícone e texto */
+      background: #1e88e5;
+      color: #fff;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1em;
+      width: 100%;
+      text-decoration: none;
+      margin-top: 5px;
+    }
+
+    .btn:hover {
+      background: #1565c0;
+    }
+
+    .btn-secondary {
+      background: #9e9e9e;
+    }
+
+    .btn-secondary:hover {
+      background: #757575;
+    }
+
+    .btn i {
+      font-size: 1em;
+      vertical-align: middle; /* 🔥 Corrige desalinhamento */
+      line-height: 1;
+    }
+  </style>
+  <!-- Ícones do Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+  <div class="container">
+    <h2><i class="fa-solid fa-folder-open"></i> Importar Alunos via CSV</h2>
+    <p>Faça o upload de um arquivo <b>CSV</b> contendo as colunas:<br>
+      <code>re, nome, pelotao, curso</code>
+    </p>
+
+    <form method="post" enctype="multipart/form-data">
+      <div class="form-group">
+        <label for="file">Selecionar arquivo CSV:</label>
+        <input type="file" id="file" name="file" accept=".csv" required>
+      </div>
+      <button type="submit" class="btn"><i class="fa-solid fa-file-import"></i><span>Importar</span></button>
+    </form>
+
+    <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">
+      <i class="fa-solid fa-arrow-left"></i><span>Voltar</span>
+    </a>
+  </div>
+
+</body>
+</html>

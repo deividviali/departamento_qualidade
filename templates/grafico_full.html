@@ -2,125 +2,170 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Gráfico em Tela Separada</title>
+  <title>Gráfico Completo - Desempenho por Questão</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <style>
     body {
-      background-color: #f4f4f4;
-      margin: 0;
-      padding: 30px;
       font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f5f5f5;
     }
 
-    h2 {
+    .quadrante {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      margin: 20px;
+    }
+
+    h3 {
+      margin-top: 0;
       text-align: center;
+    }
+
+    .grafico-filtros {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
       margin-bottom: 20px;
-      font-size: 22px;
-      color: #333;
+    }
+
+    .grafico-filtros select,
+    .grafico-filtros input,
+    .grafico-filtros button {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+
+    .grafico-filtros button {
+      background: #1e88e5;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .grafico-filtros button:hover {
+      background: #1565c0;
     }
 
     .grafico-container {
-      background-color: #fff;
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      max-width: 1000px;
-      margin: 0 auto;
+      width: 100%;
+      height: 650px;
     }
 
     canvas {
-      border-radius: 10px;
-      background-color: white;
-      padding: 15px;
+      width: 100% !important;
+      height: 650px !important;
     }
   </style>
 </head>
 <body>
+  <div class="quadrante">
+    <h3>📊 Gráfico Completo - Desempenho por Questão</h3>
 
-  <h2>Desempenho Geral por Atividade</h2>
+    <div class="grafico-filtros">
+      <input type="date" id="filtroInicio">
+      <input type="date" id="filtroFim">
 
-  <div class="grafico-container">
-    <canvas id="graficoTelaCheia" style="height: 400px;"></canvas>
+      <select id="filtroCurso">
+        <option value="todos">Todos os Cursos</option>
+        <option value="CFS25 II">CFS25 II</option>
+      </select>
+
+      <select id="filtroPelotao">
+        <option value="todos">Todos os Pelotões</option>
+        <option value="1">1º Pel</option>
+        <option value="2">2º Pel</option>
+        <option value="3">3º Pel</option>
+      </select>
+
+      <select id="filtroAtividade">
+        <option value="todas">Todas as Atividades</option>
+        <option value="A">Atividade A</option>
+        <option value="B">Atividade B</option>
+        <option value="C">Atividade C</option>
+        <option value="D">Atividade D</option>
+        <option value="E">Atividade E</option>
+        <option value="F">Atividade F</option>
+        <option value="CFS25 II">CFS25 II</option>
+        <option value="PPE">PPE</option>
+      </select>
+
+      <select id="filtroStatus">
+        <option value="todos">Todos</option>
+        <option value="certo">Certo</option>
+        <option value="errado">Errado</option>
+      </select>
+
+      <button onclick="carregarGrafico()">🔍 Atualizar</button>
+    </div>
+
+    <div class="grafico-container">
+      <canvas id="graficoRespostasFull"></canvas>
+    </div>
   </div>
 
   <script>
-    fetch('/grafico_dados')
-      .then(res => res.json())
-      .then(dados => {
-        const labels = dados.map(d => d.atividade);
-        const certo = dados.map(d => d.Certo || 0);
-        const errado = dados.map(d => d.Errado || 0);
+    let graficoFull;
 
-        const data = {
-          labels,
-          datasets: [
-            {
-              label: "Certo",
-              data: certo,
-              backgroundColor: "#2196f3"
-            },
-            {
-              label: "Errado",
-              data: errado,
-              backgroundColor: "#f44336"
-            }
-          ]
-        };
+    function carregarGrafico() {
+      const inicio = document.getElementById("filtroInicio").value;
+      const fim = document.getElementById("filtroFim").value;
+      const curso = document.getElementById("filtroCurso").value;
+      const pelotao = document.getElementById("filtroPelotao").value;
+      const atividade = document.getElementById("filtroAtividade").value;
+      const status = document.getElementById("filtroStatus").value;
 
-        const config = {
-          type: "bar",
-          data,
-          options: {
-            responsive: true,
-            layout: {
-              padding: {
-                top: 20,
-                bottom: 20,
-                left: 20,
-                right: 20
-              }
-            },
-            plugins: {
-              legend: { position: 'top' },
-              title: {
-                display: true,
-                text: "Desempenho por Atividade",
-                font: { size: 18 }
+      fetch(`/grafico_dados?inicio=${inicio}&fim=${fim}&curso=${curso}&pelotao=${pelotao}&atividade=${atividade}&status=${status}`)
+        .then(res => res.json())
+        .then(dados => {
+          const labels = dados.map(d => d.atividade);
+          const certos = dados.map(d => d.Certo || 0);
+          const errados = dados.map(d => d.Errado || 0);
+
+          const ctx = document.getElementById("graficoRespostasFull").getContext("2d");
+
+          if (!graficoFull) {
+            graficoFull = new Chart(ctx, {
+              type: "bar",
+              data: {
+                labels: labels,
+                datasets: [
+                  {
+                    label: "Certos",
+                    data: certos,
+                    backgroundColor: "rgba(75, 192, 192, 0.7)"
+                  },
+                  {
+                    label: "Errados",
+                    data: errados,
+                    backgroundColor: "rgba(255, 99, 132, 0.7)"
+                  }
+                ]
               },
-              datalabels: {
-                anchor: 'end',
-                align: 'top',
-                color: '#000',
-                font: {
-                  size: 12,
-                  weight: 'bold'
-                },
-                formatter: value => value
-              }
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                title: {
-                  display: true,
-                  text: 'Quantidade de Ocorrências'
-                }
-              },
-              x: {
-                title: {
-                  display: true,
-                  text: 'Atividade'
+              options: {
+                responsive: true,
+                animation: false,
+                scales: {
+                  y: { beginAtZero: true }
                 }
               }
-            }
-          },
-          plugins: [ChartDataLabels]
-        };
+            });
+          } else {
+            graficoFull.data.labels = labels;
+            graficoFull.data.datasets[0].data = certos;
+            graficoFull.data.datasets[1].data = errados;
+            graficoFull.update();
+          }
+        });
+    }
 
-        new Chart(document.getElementById("graficoTelaCheia"), config);
-      });
+    window.onload = carregarGrafico;
   </script>
-
 </body>
 </html>

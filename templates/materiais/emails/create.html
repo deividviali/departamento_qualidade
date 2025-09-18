@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Cadastrar E-mail</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f9; padding: 20px; }
+    .form-container { background: #fff; padding: 20px; border-radius: 8px; max-width: 600px; margin: auto; }
+    h2 { background: #1e88e5; color: white; padding: 10px; border-radius: 6px; text-align: center; }
+    label { display: block; margin-top: 10px; }
+    input, select, textarea { width: 100%; padding: 8px; margin-top: 4px; border: 1px solid #ccc; border-radius: 5px; }
+    button { margin-top: 15px; padding: 10px; background: #1e88e5; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #1565c0; }
+    a { display: inline-block; margin-top: 10px; text-decoration: none; color: #1e88e5; }
+  </style>
+</head>
+<body>
+
+  <div class="form-container">
+    <h2>➕ Cadastrar E-mail</h2>
+
+    <form method="post">
+      <label for="unidade_id">Unidade</label>
+      <select name="unidade_id" id="unidade_id" required>
+        {% for u in unidades %}
+          <option value="{{ u.id }}">{{ u.nome }}</option>
+        {% endfor %}
+      </select>
+
+      <label for="tipo_id">Tipo</label>
+      <select name="tipo_id" id="tipo_id" required>
+        {% for t in tipos %}
+          <option value="{{ t.id }}">{{ t.nome }}</option>
+        {% endfor %}
+      </select>
+
+      <label for="email">E-mail</label>
+      <input type="email" name="email" id="email" required>
+
+      <label for="responsavel">Responsável Legal</label>
+      <input type="text" name="responsavel" id="responsavel">
+
+      <label for="cpf">CPF do Responsável Legal</label>
+      <input type="text" name="cpf" id="cpf" maxlength="14" placeholder="000.000.000-00">
+
+      <label for="numero_processo">Nº do Processo SEI/GLPI</label>
+      <input type="text" name="numero_processo" id="numero_processo" maxlength="20">
+
+      <label for="observacao">Observação</label>
+      <textarea name="observacao" id="observacao"></textarea>
+
+      <button type="submit">Salvar</button>
+    </form>
+
+    <a href="{{ url_for('materiais_emails') }}">⬅ Voltar</a>
+  </div>
+
+  <script>
+    // Máscara CPF
+    const cpfInput = document.getElementById('cpf');
+    cpfInput.addEventListener('input', function(e) {
+      let value = e.target.value.replace(/\D/g, ''); // remove não números
+      if (value.length > 11) value = value.slice(0, 11);
+
+      if (value.length > 9) {
+        value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+      } else if (value.length > 6) {
+        value = value.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+      } else if (value.length > 3) {
+        value = value.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+      }
+      e.target.value = value;
+    });
+
+    // Somente números no Nº do Processo
+    const processoInput = document.getElementById('numero_processo');
+    processoInput.addEventListener('input', function(e) {
+      e.target.value = e.target.value.replace(/\D/g, ''); // só números
+    });
+  </script>
+
+</body>
+</html>

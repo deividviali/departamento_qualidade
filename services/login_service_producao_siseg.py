@@ -1,4 +1,4 @@
-# services/login_service.py
+# services/login_service_producao_siseg.py
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -6,7 +6,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium import webdriver
 from config.settings import LOGIN_URL, USERNAME, PASSWORD, DEFAULT_TIMEOUT
-import time
+import time, json
 
 def iniciar_navegador(headless=False):
     options = webdriver.ChromeOptions()
@@ -20,7 +20,8 @@ def iniciar_navegador(headless=False):
     driver.get(LOGIN_URL)
     return driver
 
-def efetuar_login(driver) -> bool:    
+
+def efetuar_login(driver) -> bool:
     try:
         # preenche credenciais
         driver.find_element(By.ID, "username").send_keys(USERNAME)
@@ -29,16 +30,45 @@ def efetuar_login(driver) -> bool:
     except (NoSuchElementException, Exception) as e:
         print(f"[login_service] Aviso: falha ao submeter login: {e}")
         return False
+
     time.sleep(8)
-    
+
     try:
-        WebDriverWait(driver, 110).until(EC.element_to_be_clickable((By.ID, "Selecionar"))).click()
+        WebDriverWait(driver, DEFAULT_TIMEOUT).until(
+            EC.element_to_be_clickable((By.ID, "Selecionar"))
+        ).click()
     except Exception as e:
         print(f"[login_service] Aviso inesperado no 'Selecionar': {e}")
 
     return True
 
 
+# Nova função para importar no Flask
+def login_siseg(headless=False): #True - para esconder
+    driver = iniciar_navegador(headless=headless)
+    sucesso = efetuar_login(driver)
+    if not sucesso:
+        driver.quit()
+        return None
+    return driver
+
+    
+
+
+# Modo standalone (compatível com subprocess antigo)
+if __name__ == "__main__":
+    try:
+        result = login_siseg(headless=True)
+        print(json.dumps(result))
+    except Exception as e:
+        print(json.dumps({"erro": str(e)}))
+
+
+
+
+
+
+##precisa ajusta para VM da função de login para baixo
 
      ###Funciona na VM
 # import os

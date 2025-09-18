@@ -170,8 +170,6 @@
       </div>
     </div>
     
-    
- 
     <div class="quadrante" id="grafico-quadrante">
       <h3>Desempenho por Questão</h3>
 
@@ -180,8 +178,8 @@
         <input type="date" id="filtroFim">
 
         <select id="filtroCurso">
-          <option value="todos">Todos os Cursos</option>          
-          <option value="CFS25 II">CFS25 II</option>          
+          <option value="todos">Todos os Cursos</option>
+          <option value="CFS25 II">CFS25 II</option>
         </select>
 
         <select id="filtroPelotao">
@@ -216,8 +214,8 @@
       <div class="grafico-container">
         <canvas id="graficoRespostas"></canvas>
       </div>
-    </div>
-
+    </div> 
+   
 
     
     <div class="quadrante">
@@ -232,16 +230,7 @@
       <button type="submit">Logout</button>
     </form>
   </div>
-
-  <form method="post" action="/logout_todos_alunos" style="text-align:center; margin-top: 20px;">
-    <button type="submit"
-            title="Alunos logados: {{ alunos_logados }}"
-            style="padding: 10px 20px; background-color: #c62828; color: white; font-weight: bold; border: none; border-radius: 5px; cursor: pointer;">
-      🔁 Deslogar Todos os Alunos
-    </button>
-  </form>
-
-  
+   
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
   function carregarUltimosRegistros() {

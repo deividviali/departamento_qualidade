@@ -1943,8 +1943,11 @@ def siseg_cadastro():
     return render_template("siseg/cadastro.html", perfis=perfis, unidades=unidades)
 
 
+# uso normal
 
+# if __name__ == '__main__':
+#     app.run(debug=True)
 
-if __name__ == '__main__':
-    app.run(debug=True)
-
+#USO docker
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)

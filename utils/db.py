@@ -79,8 +79,8 @@ from models.resultado import Resultado
 DB_HOST_MAIN = os.getenv("DB_HOST", "127.0.0.1")
 DB_USER_MAIN = os.getenv("DB_USER", "root")
 DB_PASS_MAIN = os.getenv("DB_PASS", "")
-# DB_NAME_MAIN = os.getenv("DB_NAME_MAIN", "suporte_ti_DINFO") #verificar qual nome do banco correto
-DB_NAME_MAIN = os.getenv("DB_NAME_MAIN", "suporte_ti_dinfo")
+DB_NAME_MAIN = os.getenv("DB_NAME_MAIN", "suporte_ti_DINFO") #verificar qual nome do banco correto
+# DB_NAME_MAIN = os.getenv("DB_NAME_MAIN", "suporte_ti_dinfo")
 DB_PORT_MAIN = os.getenv("DB_PORT", "3306")
 
 

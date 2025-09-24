@@ -24,6 +24,7 @@ from io import StringIO
 import secrets
 from utils.db import engine_main, engine_extern
 from services.cadastro_efetivo_producao import atualizar_efetivo
+from services.login_service_producao_siseg import login_siseg
 
 # import os
 # BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -268,116 +269,15 @@ def gerar_relatorio():
     except Exception as e:
         return f"Erro interno: {str(e)}", 500
     
-#Rota para VM Linux
-# @app.route('/analyze', methods=['GET', 'POST'])
-# def analyze():
-#     re_val = session.get("re")
-#     if not re_val:
-#         session.clear()
-#         return redirect(url_for("login"))
-
-#     # 🔹 Verificação de sessão ativa no banco
-#     engine = get_db_connection()
-#     with engine.connect() as conn:
-#         ativo = conn.execute(
-#             text("SELECT COUNT(*) FROM user_sessions WHERE user_id = :re AND ativo = 1"),
-#             {"re": re_val}
-#         ).scalar()
-
-#     if ativo == 0:
-#         session.clear()
-#         return redirect(url_for("login"))
-
-#     registrar_auditoria("Acesso", f"Aluno {re_val} acessou a tela inicial de seleção de atividades")
-
-#     # 🔹 Estado das atividades
-#     estado = carregar_estado_atividades()
-#     atividades_ativas = {
-#         chave: (sigla, nome)
-#         for chave, (sigla, nome) in ATIVIDADES_OPCOES.items()
-#         if estado.get(sigla, False)
-#     }
-
-#     # Primeira entrada (GET)
-#     if request.method == 'GET':
-#         return render_template('analyze.html',
-#                                options=atividades_ativas,
-#                                re=re_val)
-
-#     # Envio do formulário (POST)
-#     protocolo = request.form.get('protocolo', '').strip()
-#     if not protocolo:
-#         flash('Protocolo é obrigatório.', 'error')
-#         return render_template('analyze.html',
-#                                options=atividades_ativas,
-#                                re=re_val)
-
-#     sigla_atividade = request.form.get('atividade')
-#     chave_correspondente = next(
-#         (chave for chave, (sigla, _) in atividades_ativas.items() if sigla == sigla_atividade),
-#         None
-#     )
-#     if not chave_correspondente:
-#         flash('Selecione uma atividade válida.', 'error')
-#         return render_template('analyze.html',
-#                                options=atividades_ativas,
-#                                re=re_val)
-
-#     tipos = [sigla_atividade]
-
-#     tarefa = Tarefa(
-#         protocolo=protocolo,
-#         re=re_val,
-#         nome=session['nome'],
-#         pelotao=session['pelotao'],
-#         curso=session.get('curso', ''),
-#         atividades=tipos
-#     )
-
-#     def generate():
-#         # Cabeçalho de streaming
-#         yield render_template('analyze_stream_header.html',
-#                               options=ATIVIDADES_OPCOES,
-#                               re=re_val)
-
-#         yield "<script>appendLog('Iniciando navegador do SISEG');</script>"
-#         driver = iniciar_navegador(headless=True)  # 🔹 headless=True para VM Linux
-#         yield "<script>appendLog('Efetuando login no SISEG...');</script>"
-#         efetuar_login(driver)
-#         yield "<script>appendLog('Login efetuado com sucesso.');</script>"
-
-#         yield "<script>appendLog('Iniciando coleta de dados...');</script>"
-#         yield "<script>mostrarCarregando();</script>"
-#         resultados = orquestrar_tarefas(driver, tarefa)
-
-#         for tipo, resultado in zip(tipos, resultados):
-#             save_result(tipo, resultado)
-#             yield f"<script>appendLog('Resultado {tipo}: {resultado}');</script>"
-
-#         driver.quit()
-#         yield "<script>appendLog('Processo concluído.');</script>"
-#         target = url_for('report')
-#         yield f"<script>setTimeout(()=>window.location.href='{target}', 500);</script>"
-#         yield "</body></html>"
-
-#     return Response(
-#         stream_with_context(generate()),
-#         mimetype='text/html',
-#         headers={
-#             'Cache-Control': 'no-cache',
-#             'X-Accel-Buffering': 'no'
-#         }
-#     )
-
-    
-  # Uso no PC Windons
+# Rota para VM Linux
 @app.route('/analyze', methods=['GET', 'POST'])
 def analyze():
-    re_val = session.get("re")  # 🔹 garante que existe valor
+    re_val = session.get("re")
     if not re_val:
         session.clear()
         return redirect(url_for("login"))
 
+    # 🔹 Verificação de sessão ativa no banco
     engine = get_db_connection()
     with engine.connect() as conn:
         ativo = conn.execute(
@@ -399,13 +299,13 @@ def analyze():
         if estado.get(sigla, False)
     }
 
-    # 🔹 Primeira vez que entra (tela inicial)
+    # Primeira entrada (GET)
     if request.method == 'GET':
         return render_template('analyze.html',
                                options=atividades_ativas,
                                re=re_val)
 
-    # 🔹 Quando envia o formulário
+    # Envio do formulário (POST)
     protocolo = request.form.get('protocolo', '').strip()
     if not protocolo:
         flash('Protocolo é obrigatório.', 'error')
@@ -425,10 +325,6 @@ def analyze():
                                re=re_val)
 
     tipos = [sigla_atividade]
-    print(f"DEBUG analyze: tipos = {tipos!r}")
-
-    driver = iniciar_navegador(headless=False)  # False para visualizar
-    efetuar_login(driver)
 
     tarefa = Tarefa(
         protocolo=protocolo,
@@ -438,17 +334,122 @@ def analyze():
         curso=session.get('curso', ''),
         atividades=tipos
     )
-    print("DEBUG analyze: chamando orquestrar_tarefas")
 
-    resultados = orquestrar_tarefas(driver, tarefa)
-    for tipo, resultado in zip(tipos, resultados):
-        save_result(tipo, resultado)
-    driver.quit()
+    def generate():
+        # Cabeçalho de streaming
+        yield render_template('analyze_stream_header.html',
+                              options=ATIVIDADES_OPCOES,
+                              re=re_val)
 
-    return render_template(
-        'result.html',
-        resultados=zip(tipos, resultados)
+        yield "<script>appendLog('Iniciando navegador do SISEG');</script>"
+        driver = iniciar_navegador(headless=True)  # 🔹 headless=True para VM Linux
+        yield "<script>appendLog('Efetuando login no SISEG...');</script>"
+        efetuar_login(driver)
+        yield "<script>appendLog('Login efetuado com sucesso.');</script>"
+
+        yield "<script>appendLog('Iniciando coleta de dados...');</script>"
+        yield "<script>mostrarCarregando();</script>"
+        resultados = orquestrar_tarefas(driver, tarefa)
+
+        for tipo, resultado in zip(tipos, resultados):
+            save_result(tipo, resultado)
+            yield f"<script>appendLog('Resultado {tipo}: {resultado}');</script>"
+
+        driver.quit()
+        yield "<script>appendLog('Processo concluído.');</script>"
+        target = url_for('report')
+        yield f"<script>setTimeout(()=>window.location.href='{target}', 500);</script>"
+        yield "</body></html>"
+
+    return Response(
+        stream_with_context(generate()),
+        mimetype='text/html',
+        headers={
+            'Cache-Control': 'no-cache',
+            'X-Accel-Buffering': 'no'
+        }
     )
+
+    
+  # Uso no PC Windons
+# @app.route('/analyze', methods=['GET', 'POST'])
+# def analyze():
+#     re_val = session.get("re")  # 🔹 garante que existe valor
+#     if not re_val:
+#         session.clear()
+#         return redirect(url_for("login"))
+
+#     engine = get_db_connection()
+#     with engine.connect() as conn:
+#         ativo = conn.execute(
+#             text("SELECT COUNT(*) FROM user_sessions WHERE user_id = :re AND ativo = 1"),
+#             {"re": re_val}
+#         ).scalar()
+
+#     if ativo == 0:
+#         session.clear()
+#         return redirect(url_for("login"))
+
+#     registrar_auditoria("Acesso", f"Aluno {re_val} acessou a tela inicial de seleção de atividades")
+
+#     # 🔹 Estado das atividades
+#     estado = carregar_estado_atividades()
+#     atividades_ativas = {
+#         chave: (sigla, nome)
+#         for chave, (sigla, nome) in ATIVIDADES_OPCOES.items()
+#         if estado.get(sigla, False)
+#     }
+
+#     # 🔹 Primeira vez que entra (tela inicial)
+#     if request.method == 'GET':
+#         return render_template('analyze.html',
+#                                options=atividades_ativas,
+#                                re=re_val)
+
+#     # 🔹 Quando envia o formulário
+#     protocolo = request.form.get('protocolo', '').strip()
+#     if not protocolo:
+#         flash('Protocolo é obrigatório.', 'error')
+#         return render_template('analyze.html',
+#                                options=atividades_ativas,
+#                                re=re_val)
+
+#     sigla_atividade = request.form.get('atividade')
+#     chave_correspondente = next(
+#         (chave for chave, (sigla, _) in atividades_ativas.items() if sigla == sigla_atividade),
+#         None
+#     )
+#     if not chave_correspondente:
+#         flash('Selecione uma atividade válida.', 'error')
+#         return render_template('analyze.html',
+#                                options=atividades_ativas,
+#                                re=re_val)
+
+#     tipos = [sigla_atividade]
+#     print(f"DEBUG analyze: tipos = {tipos!r}")
+
+#     driver = iniciar_navegador(headless=False)  # False para visualizar
+#     efetuar_login(driver)
+
+#     tarefa = Tarefa(
+#         protocolo=protocolo,
+#         re=re_val,
+#         nome=session['nome'],
+#         pelotao=session['pelotao'],
+#         curso=session.get('curso', ''),
+#         atividades=tipos
+#     )
+#     print("DEBUG analyze: chamando orquestrar_tarefas")
+
+#     resultados = orquestrar_tarefas(driver, tarefa)
+#     for tipo, resultado in zip(tipos, resultados):
+#         save_result(tipo, resultado)
+#     driver.quit()
+
+#     return render_template(
+#         'result.html',
+#         resultados=zip(tipos, resultados)
+#     )
 
 @app.route('/report')
 def report():
@@ -1640,12 +1641,11 @@ def materiais_chips_delete(id):
     flash("Chip excluído com sucesso!", "info")
     return redirect(url_for("materiais_chips"))
 
-#Cadastro e atualização efetivo SISEG produção
-from services.login_service_producao_siseg import login_siseg
+
 @app.route("/siseg/cadastro-efetivo", methods=["GET", "POST"])
 def siseg_cadastro_efetivo():
     if request.method == "POST":
-        status_msgs = []  # lista para mostrar o status ao usuário
+        status_msgs = []
 
         matriculas_raw = request.form.get("matriculas", "").strip()
         if not matriculas_raw:
@@ -1655,17 +1655,18 @@ def siseg_cadastro_efetivo():
         matriculas = [m.strip() for m in matriculas_raw.split(";") if m.strip()]
         total_inseridos, total_atualizados, total_nao_encontrados = 0, 0, 0
 
+        # conexões com os bancos
         with engine_main.begin() as conn_main, engine_extern.connect() as conn_ext:
             for mat in matriculas:
                 militar = conn_ext.execute(
-                    text("SELECT * FROM vw_militares_detalhes WHERE matricula = :mat"),
+                    text("SELECT * FROM vw_aplicacao_suporte WHERE matricula = :mat"),
                     {"mat": mat}
-                ).fetchone()
+                ).mappings().fetchone()
 
                 if militar:
                     existe = conn_main.execute(
                         text("SELECT 1 FROM dados_importados_militar WHERE matricula = :mat"),
-                        {"mat": militar.matricula}
+                        {"mat": militar["matricula"]}
                     ).fetchone()
 
                     if existe:
@@ -1680,64 +1681,62 @@ def siseg_cadastro_efetivo():
                                 unidade_nome = :unidade_nome
                             WHERE matricula = :matricula
                         """), {
-                            "matricula": militar.matricula,
-                            "nome_completo": militar.nome_completo,
-                            "nome_guerra": militar.nome_guerra,
-                            "cpf": militar.cpf,
-                            "telefone": militar.telefone,
-                            "graduacao": militar.graduacao,
-                            "email": militar.email,
-                            "unidade_nome": militar.unidade_lotacao
+                            "matricula": militar["matricula"],
+                            "nome_completo": militar["nome"],
+                            "nome_guerra": militar["nome_guerra"],
+                            "cpf": militar["cpf"],
+                            "telefone": militar["telefone_celular_1"],
+                            "graduacao": militar["posto_graduacao"],
+                            "email": militar["email"],
+                            "unidade_nome": militar["id_unidade_movimentacao"]
                         })
-                        registrar_auditoria("Update", f"Cadastro Efetivo atualizado - Matrícula {militar.matricula}")
+                        registrar_auditoria("Update", f"Cadastro Efetivo atualizado - Matrícula {militar['matricula']}")
                         total_atualizados += 1
                     else:
                         conn_main.execute(text("""
                             INSERT INTO dados_importados_militar
                             (tipo, matricula, nome_militar, nome_guerra, cpf, telefone, graduacao, email,
-                            unidade_nome, data_cadastro)
+                             unidade_nome, data_cadastro)
                             VALUES ('efetivo', :matricula, :nome_completo, :nome_guerra, :cpf, :telefone,
                                     :graduacao, :email, :unidade_nome, NOW())
                         """), {
-                            "matricula": militar.matricula,
-                            "nome_completo": militar.nome_completo,
-                            "nome_guerra": militar.nome_guerra,
-                            "cpf": militar.cpf,
-                            "telefone": militar.telefone,
-                            "graduacao": militar.graduacao,
-                            "email": militar.email,
-                            "unidade_nome": militar.unidade_lotacao
+                            "matricula": militar["matricula"],
+                            "nome_completo": militar["nome"],
+                            "nome_guerra": militar["nome_guerra"],
+                            "cpf": militar["cpf"],
+                            "telefone": militar["telefone_celular_1"],
+                            "graduacao": militar["posto_graduacao"],
+                            "email": militar["email"],
+                            "unidade_nome": militar["id_unidade_movimentacao"]
                         })
-                        registrar_auditoria("Create", f"Cadastro Efetivo inserido - Matrícula {militar.matricula}")
+                        registrar_auditoria("Create", f"Cadastro Efetivo inserido - Matrícula {militar['matricula']}")
                         total_inseridos += 1
                 else:
-                    registrar_auditoria("Erro", f"Matrícula não encontrada no db_externo: {mat}")
+                    registrar_auditoria("Erro", f"Matrícula não encontrada no SIGA: {mat}")
                     total_nao_encontrados += 1
-                    
+
         if total_inseridos == 0 and total_atualizados == 0:
             status_msgs.append(f"❌ Nenhuma matrícula encontrada ({total_nao_encontrados} não encontrado(s)). Processo finalizado.")
             return render_template("siseg/status.html", status_msgs=status_msgs)
 
-        status_msgs.append(f"✅ Dados coletados: {total_inseridos} inserido(s), "
-                           f"{total_atualizados} atualizado(s), "
-                           f"{total_nao_encontrados} não encontrado(s).")
+        status_msgs.append(
+            f"✅ Dados coletados: {total_inseridos} inserido(s), "
+            f"{total_atualizados} atualizado(s), "
+            f"{total_nao_encontrados} não encontrado(s)."
+        )
 
         # ---------- Iniciando login no SISEG ----------
         status_msgs.append("🔄 Iniciando login no SISEG...")
 
-        matriculas = [m.strip() for m in matriculas_raw.split(";") if m.strip()]
         try:
-            # login visível para debug
             login_driver = login_siseg(headless=False)
 
             if login_driver:
-                session["siseg_token"] = "ok"  # opcional
+                session["siseg_token"] = "ok"
                 status_msgs.append("✅ Login no SISEG realizado com sucesso.")
 
-                # 🔹 Passa o driver para a função
                 status_msgs = atualizar_efetivo(engine_main, status_msgs, matriculas, login_driver)
 
-                # no fim, fecha apenas 1 vez
                 login_driver.quit()
             else:
                 status_msgs.append("❌ Falha no login do SISEG.")            
@@ -1745,13 +1744,13 @@ def siseg_cadastro_efetivo():
         except Exception as e:
             status_msgs.append(f"❌ Erro ao conectar no SISEG: {e}")
 
-        # 🔹 Renderiza no final (só uma vez)
         return render_template("siseg/status.html", status_msgs=status_msgs)
 
     # GET → tela inicial
     return render_template("siseg/cadastro_efetivo.html")
 
-    
+
+   
 
 
 ## parei aqui
@@ -1825,7 +1824,7 @@ def siseg_cadastro_usuario():
                     registrar_auditoria("Create", f"Cadastro Efetivo - Matrícula {militar.matricula}")
                     total_inseridos += 1
                 else:
-                    registrar_auditoria("Erro", f"Matrícula não encontrada no db_externo: {mat}")
+                    registrar_auditoria("Erro", f"Matrícula não encontrada no SIGA: {mat}")
                     total_nao_encontrados += 1
 
         flash(f"{total_inseridos} cadastro(s) realizado(s), {total_nao_encontrados} matrícula(s) não encontradas.", "info")

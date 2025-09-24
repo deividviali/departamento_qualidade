@@ -56,20 +56,19 @@ def buscar_unidade_siseg(engine, unidade_nome: str):
         result = conn.execute(text("""
             SELECT unidade_siseg
             FROM unidades
-            WHERE nomenclatura_unidade LIKE :nome
+            WHERE id_unidade LIKE :nome
             LIMIT 1
         """), {"nome": f"%{unidade_nome}%"}).fetchone()
     return result.unidade_siseg if result else None
 
-
 def buscar_referencia_unidade_db(engine, unidade_nome: str):
     with engine.connect() as conn:
         result = conn.execute(text("""
-            SELECT id, nomenclatura_unidade
+            SELECT id, id_unidade
             FROM unidades
-            WHERE nomenclatura_unidade LIKE :nomenclatura_unidade
+            WHERE id_unidade LIKE :id_unidade
             LIMIT 1
-        """), {"nomenclatura_unidade": f"%{unidade_nome}%"}).mappings().fetchone()
+        """), {"id_unidade": f"%{unidade_nome}%"}).mappings().fetchone()
     return result if result else None
 
 
@@ -230,7 +229,7 @@ def atualizar_efetivo(engine_main, status_msgs: list, matriculas: list, driver):
             status_msgs.append(msg)
             
 
-    driver.quit()
+    # driver.quit()
     status_msgs.append("🏁 Atualização concluída.")
     return status_msgs
 

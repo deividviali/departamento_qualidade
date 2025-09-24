@@ -79,16 +79,17 @@ from models.resultado import Resultado
 DB_HOST_MAIN = os.getenv("DB_HOST", "127.0.0.1")
 DB_USER_MAIN = os.getenv("DB_USER", "root")
 DB_PASS_MAIN = os.getenv("DB_PASS", "")
-# DB_NAME_MAIN = os.getenv("DB_NAME_MAIN", "suporte_ti_DINFO")
+# DB_NAME_MAIN = os.getenv("DB_NAME_MAIN", "suporte_ti_DINFO") #verificar qual nome do banco correto
 DB_NAME_MAIN = os.getenv("DB_NAME_MAIN", "suporte_ti_dinfo")
 DB_PORT_MAIN = os.getenv("DB_PORT", "3306")
 
-# Configuração Banco Externo (simulação do avião)
-DB_HOST_EXT = os.getenv("DB_HOST_EXT", "127.0.0.1")
-DB_USER_EXT = os.getenv("DB_USER_EXT", "usuariofull")
-DB_PASS_EXT = os.getenv("DB_PASS_EXT", "SenhaForte123!")
-DB_NAME_EXT = os.getenv("DB_NAME_EXTERN", "db_externo")
-DB_PORT_EXT = os.getenv("DB_PORT_EXT", "3306")
+
+# Configuração Banco Externo (SIGA)
+DB_HOST_EXT = "172.16.139.20"
+DB_PORT_EXT = 33061
+DB_USER_EXT = "app.suporte.dinfo"
+DB_PASS_EXT = "5hjnk4Ji&z%&"
+DB_NAME_EXT = "siga-homo83"  
 
 # Criar engines
 engine_main = create_engine(

@@ -8,17 +8,61 @@ from selenium import webdriver
 from config.settings import LOGIN_URL, USERNAME, PASSWORD, DEFAULT_TIMEOUT
 import time, json
 
-def iniciar_navegador(headless=False):
-    options = webdriver.ChromeOptions()
-    if headless:
-        options.add_argument("--headless")
-        options.add_argument("--disable-gpu")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
+import tempfile
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 
-    driver = webdriver.Chrome(options=options)
+#Para VM linux
+import tempfile
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+
+
+def iniciar_navegador(headless=False):
+    options = Options()
+    
+    # 🔹 Ajustes para rodar no Docker/Linux
+    if headless:
+        options.add_argument("--headless=new")  # novo modo headless
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--remote-debugging-port=9222")
+
+    # 🔹 Criar diretório temporário para evitar "user-data-dir already in use"
+    user_data_dir = tempfile.mkdtemp()
+    options.add_argument(f"--user-data-dir={user_data_dir}")
+
+    # 🔹 Caminho do binário do Chromium
+    options.binary_location = "/usr/bin/chromium"
+
+    # 🔹 Caminho do chromedriver
+    driver = webdriver.Chrome(
+        service=Service("/usr/bin/chromedriver"),
+        options=options
+    )
+
     driver.get(LOGIN_URL)
     return driver
+
+
+
+
+
+#função para windos
+# def iniciar_navegador(headless=False):
+#     options = webdriver.ChromeOptions()
+#     if headless:
+#         options.add_argument("--headless")
+#         options.add_argument("--disable-gpu")
+#         options.add_argument("--no-sandbox")
+#         options.add_argument("--disable-dev-shm-usage")
+
+#     driver = webdriver.Chrome(options=options)
+#     driver.get(LOGIN_URL)
+#     return driver
 
 
 def efetuar_login(driver) -> bool:

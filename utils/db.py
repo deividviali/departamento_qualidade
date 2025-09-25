@@ -19,20 +19,14 @@ DB_PORT_MAIN = os.getenv("DB_PORT", "3306")
 
 
 # Configuração Banco Externo (SIGA)
-# DB_HOST_EXT = "172.16.139.20"
-# DB_PORT_EXT = 33061
-# DB_USER_EXT = "app.suporte.dinfo"
-# DB_PASS_EXT = os.getenv("DB_PASS_EXT", "")
-# DB_NAME_EXT = "siga-homo83"  
-
-#Para uso no Docker
 DB_HOST_EXT = "172.16.139.20"
 DB_PORT_EXT = 33061
 DB_USER_EXT = "app.suporte.dinfo"
-DB_PASS_EXT = os.getenv("DB_PASS_EXT", "")   
-DB_NAME_EXT = "siga-homo83"
+DB_PASS_EXT = os.getenv("DB_PASS_EXT", "")
+DB_NAME_EXT = "siga-homo83"  
 
-DB_PASS_SAFE = quote_plus(DB_PASS_EXT)
+
+
 # Criar engines
 engine_main = create_engine(
     f"mysql+pymysql://{DB_USER_MAIN}:{DB_PASS_MAIN}@{DB_HOST_MAIN}:{DB_PORT_MAIN}/{DB_NAME_MAIN}",
@@ -40,13 +34,28 @@ engine_main = create_engine(
     pool_pre_ping=True,
     future=True
 )
-
 engine_extern = create_engine(
-    f"mysql+pymysql://{DB_USER_EXT}:{DB_PASS_SAFE}@{DB_HOST_EXT}:{DB_PORT_EXT}/{DB_NAME_EXT}",
+    f"mysql+pymysql://{DB_USER_EXT}:{DB_PASS_EXT}@{DB_HOST_EXT}:{DB_PORT_EXT}/{DB_NAME_EXT}",
     echo=False,
     pool_pre_ping=True,
     future=True
 )
+
+#Para uso no Docker
+# DB_HOST_EXT = "172.16.139.20"
+# DB_PORT_EXT = 33061
+# DB_USER_EXT = "app.suporte.dinfo"
+# DB_PASS_EXT = os.getenv("DB_PASS_EXT", "")   
+# DB_NAME_EXT = "siga-homo83"
+
+
+# DB_PASS_SAFE = quote_plus(DB_PASS_EXT)
+# engine_extern = create_engine(
+#     f"mysql+pymysql://{DB_USER_EXT}:{DB_PASS_SAFE}@{DB_HOST_EXT}:{DB_PORT_EXT}/{DB_NAME_EXT}",
+#     echo=False,
+#     pool_pre_ping=True,
+#     future=True
+# )
 
 # Funções de acesso
 def get_engine_extern():

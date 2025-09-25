@@ -10,10 +10,10 @@ from sqlalchemy import create_engine, text
 from models.resultado import Resultado
 
 # Configurações Banco Principal
-DB_HOST_MAIN = os.getenv("DB_HOST", "127.0.0.1")
-DB_USER_MAIN = os.getenv("DB_USER", "root")
+# DB_HOST_MAIN = os.getenv("DB_HOST", "127.0.0.1")
+B_HOST_MAIN = os.getenv("DB_HOST", "172.16.139.78")
+DB_USER_MAIN = os.getenv("DB_USER", "suporte_dinfo")
 DB_PASS_MAIN = os.getenv("DB_PASS", "")
-DB_NAME_MAIN = os.getenv("DB_NAME_MAIN", "suporte_ti_DINFO") #verificar qual nome do banco correto
 DB_NAME_MAIN = os.getenv("DB_NAME_MAIN", "suporte_ti_dinfo")
 DB_PORT_MAIN = os.getenv("DB_PORT", "3306")
 

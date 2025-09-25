@@ -11,7 +11,7 @@ from models.resultado import Resultado
 
 # Configurações Banco Principal
 # DB_HOST_MAIN = os.getenv("DB_HOST", "127.0.0.1")
-B_HOST_MAIN = os.getenv("DB_HOST", "172.16.139.78")
+DB_HOST_MAIN = os.getenv("DB_HOST", "172.16.139.78")
 DB_USER_MAIN = os.getenv("DB_USER", "suporte_dinfo")
 DB_PASS_MAIN = os.getenv("DB_PASS", "")
 DB_NAME_MAIN = os.getenv("DB_NAME_MAIN", "suporte_ti_dinfo")

@@ -11,12 +11,21 @@ from models.resultado import Resultado
 
 # Configurações Banco Principal
 # DB_HOST_MAIN = os.getenv("DB_HOST", "127.0.0.1")
-DB_HOST_MAIN = os.getenv("DB_HOST", "172.16.139.78")
-DB_USER_MAIN = os.getenv("DB_USER", "suporte_dinfo")
-DB_PASS_MAIN = os.getenv("DB_PASS", "")
+DB_HOST_MAIN = os.getenv("DB_HOST_MAIN", "172.16.139.78")
+DB_PORT_MAIN = os.getenv("DB_PORT_MAIN", "3306")
+DB_USER_MAIN = os.getenv("DB_USER_MAIN", "suporte_dinfo")
+DB_PASS_MAIN = os.getenv("DB_PASS_MAIN", "")
 DB_NAME_MAIN = os.getenv("DB_NAME_MAIN", "suporte_ti_dinfo")
-DB_PORT_MAIN = os.getenv("DB_PORT", "3306")
 
+DB_MAIN_USER_SAFE = quote_plus(DB_USER_MAIN)
+DB_MAIN_PASS_SAFE = quote_plus(DB_PASS_MAIN)
+
+engine_main = create_engine(
+    f"mysql+pymysql://{DB_MAIN_USER_SAFE}:{DB_MAIN_PASS_SAFE}@{DB_HOST_MAIN}:{DB_PORT_MAIN}/{DB_NAME_MAIN}",
+    echo=False,
+    pool_pre_ping=True,
+    future=True
+)
 
 # # Configuração Banco Externo (SIGA)
 # DB_HOST_EXT = "172.16.139.20"
@@ -25,16 +34,6 @@ DB_PORT_MAIN = os.getenv("DB_PORT", "3306")
 # DB_PASS_EXT = os.getenv("DB_PASS_EXT", "")
 # DB_NAME_EXT = "siga-homo83"  
 
-
-DB_MAIN_PASS_SAFE = quote_plus(DB_PASS_MAIN)
-DB_MAIN_USER_SAFE = quote_plus(DB_USER_MAIN)
-# Criar engines
-engine_main = create_engine(
-    f"mysql+pymysql://{DB_MAIN_USER_SAFE}:{DB_MAIN_PASS_SAFE}@{DB_HOST_MAIN}:{DB_PORT_MAIN}/{DB_NAME_MAIN}",
-    echo=False,
-    pool_pre_ping=True,
-    future=True
-)
 # engine_extern = create_engine(
 #     f"mysql+pymysql://{DB_USER_EXT}:{DB_PASS_EXT}@{DB_HOST_EXT}:{DB_PORT_EXT}/{DB_NAME_EXT}",
 #     echo=False,
@@ -43,15 +42,15 @@ engine_main = create_engine(
 # )
 
 # Para uso na VM
-DB_HOST_EXT = "172.16.139.20"
-DB_PORT_EXT = 33061
-DB_USER_EXT = "app.suporte.dinfo"
-DB_PASS_EXT = os.getenv("DB_PASS_EXT", "")   
-DB_NAME_EXT = "siga-homo83"
+DB_HOST_EXT = os.getenv("DB_HOST_EXT", "172.16.139.20")
+DB_PORT_EXT = os.getenv("DB_PORT_EXT", "33061")
+DB_USER_EXT = os.getenv("DB_USER_EXT", "app.suporte.dinfo")
+DB_PASS_EXT = os.getenv("DB_PASS_EXT", "")
+DB_NAME_EXT = os.getenv("DB_NAME_EXT", "siga-homo83")
 
-
-DB_PASS_SAFE = quote_plus(DB_PASS_EXT)
 DB_USER_SAFE = quote_plus(DB_USER_EXT)
+DB_PASS_SAFE = quote_plus(DB_PASS_EXT)
+
 engine_extern = create_engine(
     f"mysql+pymysql://{DB_USER_SAFE}:{DB_PASS_SAFE}@{DB_HOST_EXT}:{DB_PORT_EXT}/{DB_NAME_EXT}",
     echo=False,

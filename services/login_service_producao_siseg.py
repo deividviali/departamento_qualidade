@@ -1,4 +1,5 @@
 # services/login_service_producao_siseg.py
+#função para windos
 
 # from selenium.webdriver.common.by import By
 # from selenium.webdriver.support.ui import WebDriverWait
@@ -8,7 +9,6 @@
 # from config.settings import LOGIN_URL, USERNAME, PASSWORD, DEFAULT_TIMEOUT
 # import time, json
 
-# #função para windos
 # def iniciar_navegador(headless=False):
 #     options = webdriver.ChromeOptions()
 #     if headless:
@@ -79,7 +79,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.chrome.service import Service as ChromeService
-from config.settings import LOGIN_URL, USERNAME, PASSWORD, DEFAULT_TIMEOUT
+from config.settings import LOGIN_URL, USERNAME_PRODUCAO, PASSWORD_PRODUCAO, DEFAULT_TIMEOUT
 
 
 def find_free_display(start: int = 200) -> str:
@@ -135,8 +135,8 @@ def iniciar_navegador(headless: bool = False):
 
 def efetuar_login(driver) -> bool:
     try:
-        driver.find_element(By.ID, "username").send_keys(USERNAME)
-        driver.find_element(By.ID, "password").send_keys(PASSWORD)
+        driver.find_element(By.ID, "username").send_keys(USERNAME_PRODUCAO)
+        driver.find_element(By.ID, "password").send_keys(PASSWORD_PRODUCAO)
         driver.find_element(By.ID, "entrar").click()
     except (NoSuchElementException, Exception) as e:
         print(f"[login_service] Aviso: falha ao submeter login: {e}")

@@ -26,10 +26,11 @@ DB_PORT_MAIN = os.getenv("DB_PORT", "3306")
 # DB_NAME_EXT = "siga-homo83"  
 
 
-
+DB_MAIN_PASS_SAFE = quote_plus(DB_PASS_MAIN)
+DB_MAIN_USER_SAFE = quote_plus(DB_USER_MAIN)
 # Criar engines
 engine_main = create_engine(
-    f"mysql+pymysql://{DB_USER_MAIN}:{DB_PASS_MAIN}@{DB_HOST_MAIN}:{DB_PORT_MAIN}/{DB_NAME_MAIN}",
+    f"mysql+pymysql://{DB_MAIN_USER_SAFE}:{DB_MAIN_PASS_SAFE}@{DB_HOST_MAIN}:{DB_PORT_MAIN}/{DB_NAME_MAIN}",
     echo=False,
     pool_pre_ping=True,
     future=True
@@ -50,8 +51,9 @@ DB_NAME_EXT = "siga-homo83"
 
 
 DB_PASS_SAFE = quote_plus(DB_PASS_EXT)
+DB_USER_SAFE = quote_plus(DB_USER_EXT)
 engine_extern = create_engine(
-    f"mysql+pymysql://{DB_USER_EXT}:{DB_PASS_SAFE}@{DB_HOST_EXT}:{DB_PORT_EXT}/{DB_NAME_EXT}",
+    f"mysql+pymysql://{DB_USER_SAFE}:{DB_PASS_SAFE}@{DB_HOST_EXT}:{DB_PORT_EXT}/{DB_NAME_EXT}",
     echo=False,
     pool_pre_ping=True,
     future=True

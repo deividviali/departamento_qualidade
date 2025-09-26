@@ -79,7 +79,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.chrome.service import Service as ChromeService
-from config.settings import LOGIN_URL, USERNAME_PRODUCAO, PASSWORD_PRODUCAO, DEFAULT_TIMEOUT
+from config.settings import LOGIN_URL_PRODUCAO, USERNAME_PRODUCAO, PASSWORD_PRODUCAO, DEFAULT_TIMEOUT
 
 
 def find_free_display(start: int = 200) -> str:
@@ -129,7 +129,7 @@ def iniciar_navegador(headless: bool = False):
     driver.xvfb_proc = xvfb_proc
 
     driver.set_page_load_timeout(DEFAULT_TIMEOUT)
-    driver.get(LOGIN_URL)
+    driver.get(LOGIN_URL_PRODUCAO)
     return driver
 
 

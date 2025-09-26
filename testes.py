@@ -1,6 +1,6 @@
-#gera senha hash
-# from werkzeug.security import generate_password_hash
-# print(generate_password_hash("12345"))
+# gera senha hash
+from werkzeug.security import generate_password_hash
+print(generate_password_hash("123456"))
 
 
 # from sqlalchemy import create_engine, text
